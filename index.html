@@ -1,1 +1,886 @@
-index.html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d5c3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Ветклиника Лапа и Хвост — онлайн запись на приём в Уфе">
+<title>🐾 Лапа и Хвост</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Onest:wght@300;400;500&display=swap');
+
+  :root {
+    --green: #0d5c3a;
+    --green-mid: #1a7a4e;
+    --green-light: #2da866;
+    --cream: #f5f0e8;
+    --cream-dark: #ede6d6;
+    --brown: #8b5e3c;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(13,92,58,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Onest', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SPLASH */
+  #splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--green);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  #splash.hide { opacity: 0; transform: scale(1.05); pointer-events: none; }
+  .splash-paw { font-size: 64px; animation: bounce 1s ease infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .splash-title {
+    font-family: 'Unbounded', sans-serif;
+    color: var(--white); font-size: 22px; font-weight: 700;
+    text-align: center; line-height: 1.3;
+  }
+  .splash-sub { color: rgba(255,255,255,0.6); font-size: 14px; }
+
+  /* APP */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+  #app.visible { display: flex; }
+
+  /* HEADER */
+  .header {
+    background: var(--green);
+    padding: 20px 20px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .header-logo {
+    font-family: 'Unbounded', sans-serif;
+    color: var(--white); font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .header-logo span { font-size: 22px; }
+  .header-role {
+    background: rgba(255,255,255,0.15);
+    color: var(--white); font-size: 12px;
+    padding: 4px 10px; border-radius: 20px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .header-role:hover { background: rgba(255,255,255,0.25); }
+
+  /* NAV */
+  .nav {
+    display: flex; gap: 4px; margin-top: 12px;
+  }
+  .nav-btn {
+    flex: 1; background: rgba(255,255,255,0.1);
+    border: none; color: rgba(255,255,255,0.7);
+    padding: 8px 4px; border-radius: var(--radius-sm);
+    font-family: 'Onest', sans-serif; font-size: 11px;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .nav-btn .ico { font-size: 18px; }
+  .nav-btn.active { background: rgba(255,255,255,0.25); color: var(--white); }
+  .nav-btn:hover { background: rgba(255,255,255,0.2); color: var(--white); }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 20px 16px; max-width: 480px; margin: 0 auto; width: 100%; }
+
+  /* PAGE */
+  .page { display: none; animation: fadeUp 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--green); margin-bottom: 16px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+  }
+
+  /* HERO CARD */
+  .hero-card {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: '🐾';
+    position: absolute; right: 16px; bottom: -8px;
+    font-size: 80px; opacity: 0.15;
+  }
+  .hero-card h2 {
+    font-family: 'Unbounded', sans-serif;
+    color: var(--white); font-size: 20px;
+    margin-bottom: 6px; line-height: 1.3;
+  }
+  .hero-card p { color: rgba(255,255,255,0.8); font-size: 13px; line-height: 1.5; }
+
+  /* QUICK ACTIONS */
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .action-btn {
+    background: var(--white);
+    border: none; border-radius: var(--radius);
+    padding: 16px 12px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    text-align: center;
+  }
+  .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(13,92,58,0.18); }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn .ico { font-size: 28px; }
+  .action-btn .lbl { font-family: 'Onest', sans-serif; font-size: 12px; font-weight: 500; color: var(--text); }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--cream);
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-family: 'Onest', sans-serif; font-size: 15px;
+    color: var(--text);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--green-light);
+    background: var(--white);
+  }
+  .form-textarea { resize: none; height: 80px; }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%; padding: 14px;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary { background: var(--green); color: var(--white); }
+  .btn-primary:hover { background: var(--green-mid); transform: translateY(-1px); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary { background: var(--cream-dark); color: var(--green); margin-top: 8px; }
+  .btn-danger { background: #fee2e2; color: #dc2626; margin-top: 8px; }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #dc2626; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+
+  /* APPOINTMENT ITEM */
+  .appt-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .appt-item:last-child { border-bottom: none; }
+  .appt-avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--cream); display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .appt-info { flex: 1; min-width: 0; }
+  .appt-name { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
+  .appt-sub { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .appt-time { font-size: 12px; font-weight: 600; color: var(--green); flex-shrink: 0; }
+
+  /* PET CARD */
+  .pet-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+    display: flex; gap: 14px; align-items: flex-start;
+    cursor: pointer; transition: transform 0.2s;
+  }
+  .pet-card:hover { transform: translateY(-2px); }
+  .pet-avatar {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--cream); display: flex; align-items: center; justify-content: center;
+    font-size: 28px; flex-shrink: 0;
+  }
+  .pet-info { flex: 1; }
+  .pet-name { font-family: 'Unbounded', sans-serif; font-size: 14px; margin-bottom: 4px; }
+  .pet-breed { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--white);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 32px;
+    width: 100%; max-width: 480px; margin: 0 auto;
+    transform: translateY(100%); transition: transform 0.3s ease;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle {
+    width: 36px; height: 4px; background: var(--cream-dark);
+    border-radius: 2px; margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 18px; margin-bottom: 20px; color: var(--green);
+  }
+
+  /* SCHEDULE GRID */
+  .schedule-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .time-slot {
+    background: var(--cream);
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 10px 4px; text-align: center;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .time-slot:hover { border-color: var(--green-light); background: #f0fdf4; }
+  .time-slot.selected { background: var(--green); color: var(--white); border-color: var(--green); }
+  .time-slot.busy { opacity: 0.35; pointer-events: none; text-decoration: line-through; }
+
+  /* DATE ROW */
+  .date-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; }
+  .date-row::-webkit-scrollbar { display: none; }
+  .date-chip {
+    flex-shrink: 0; background: var(--cream);
+    border: 2px solid transparent; border-radius: var(--radius-sm);
+    padding: 8px 14px; text-align: center; cursor: pointer; transition: all 0.15s;
+  }
+  .date-chip .day-name { font-size: 11px; color: var(--text-muted); }
+  .date-chip .day-num { font-size: 18px; font-weight: 600; }
+  .date-chip.selected { background: var(--green); border-color: var(--green); }
+  .date-chip.selected .day-name,
+  .date-chip.selected .day-num { color: var(--white); }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-card {
+    background: var(--white); border-radius: var(--radius-sm);
+    padding: 14px 10px; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-num { font-family: 'Unbounded', sans-serif; font-size: 22px; color: var(--green); }
+  .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--green); color: var(--white);
+    padding: 12px 20px; border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(13,92,58,0.3);
+    z-index: 9000; transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* SWITCH ROLE */
+  .role-switcher {
+    display: flex; gap: 4px;
+    background: var(--cream-dark);
+    border-radius: var(--radius-sm);
+    padding: 4px; margin-bottom: 20px;
+  }
+  .role-btn {
+    flex: 1; padding: 10px; border: none;
+    border-radius: 8px; font-family: 'Onest', sans-serif;
+    font-size: 13px; cursor: pointer;
+    background: transparent; color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .role-btn.active { background: var(--green); color: var(--white); font-weight: 600; }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state .ico { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--cream-dark);
+    font-size: 14px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .lbl { color: var(--text-muted); }
+  .info-row .val { font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-paw">🐾</div>
+  <div class="splash-title">Лапа и Хвост</div>
+  <div class="splash-sub">Ветеринарная клиника · Уфа</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-logo"><span>🐾</span> Лапа и Хвост</div>
+      <div class="header-role" onclick="toggleRoleModal()">👤 <span id="roleLabel">Клиент</span></div>
+    </div>
+    <div class="nav" id="nav">
+      <button class="nav-btn active" onclick="showPage('home', this)">
+        <span class="ico">🏠</span> Главная
+      </button>
+      <button class="nav-btn" onclick="showPage('record', this)">
+        <span class="ico">📅</span> Запись
+      </button>
+      <button class="nav-btn" onclick="showPage('pets', this)">
+        <span class="ico">🐶</span> Питомцы
+      </button>
+      <button class="nav-btn" onclick="showPage('doctor', this)">
+        <span class="ico">👨‍⚕️</span> Врач
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <div class="hero-card">
+        <h2>Здоровье вашего питомца — наша забота</h2>
+        <p>Уфа · пн-сб 9:00–20:00 · вс 10:00–17:00</p>
+      </div>
+
+      <div class="quick-actions">
+        <button class="action-btn" onclick="showPage('record', document.querySelectorAll('.nav-btn')[1])">
+          <span class="ico">📅</span>
+          <span class="lbl">Записаться на приём</span>
+        </button>
+        <button class="action-btn" onclick="showPage('pets', document.querySelectorAll('.nav-btn')[2])">
+          <span class="ico">🐾</span>
+          <span class="lbl">Мои питомцы</span>
+        </button>
+        <button class="action-btn" onclick="openModal('callModal')">
+          <span class="ico">📞</span>
+          <span class="lbl">Позвонить</span>
+        </button>
+        <button class="action-btn" onclick="openModal('addressModal')">
+          <span class="ico">📍</span>
+          <span class="lbl">Адрес</span>
+        </button>
+      </div>
+
+      <div class="section-title">Ближайшие записи</div>
+      <div class="card" id="upcomingList">
+        <div class="appt-item">
+          <div class="appt-avatar">🐱</div>
+          <div class="appt-info">
+            <div class="appt-name">Мурзик</div>
+            <div class="appt-sub">Плановый осмотр · Иванова А.А.</div>
+          </div>
+          <div>
+            <div class="appt-time">Пт 14:30</div>
+            <div class="badge badge-yellow">Ожидает</div>
+          </div>
+        </div>
+        <div class="appt-item">
+          <div class="appt-avatar">🐶</div>
+          <div class="appt-info">
+            <div class="appt-name">Рекс</div>
+            <div class="appt-sub">Вакцинация · Петров В.С.</div>
+          </div>
+          <div>
+            <div class="appt-time">Сб 10:00</div>
+            <div class="badge badge-green">Подтверждена</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">О нас</div>
+      <div class="card">
+        <div class="info-row"><span class="lbl">Адрес</span><span class="val">г. Уфа, ул. Примерная, 1</span></div>
+        <div class="info-row"><span class="lbl">Телефон</span><span class="val">+7 (347) 000-00-00</span></div>
+        <div class="info-row"><span class="lbl">Режим</span><span class="val">пн-сб 9:00–20:00</span></div>
+        <div class="info-row"><span class="lbl">Врачей</span><span class="val">5 специалистов</span></div>
+      </div>
+    </div>
+
+    <!-- RECORD PAGE -->
+    <div class="page" id="page-record">
+      <div class="section-title">Запись на приём</div>
+
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Ваше имя</label>
+          <input class="form-input" type="text" placeholder="Иванова Анна Александровна" id="ownerName">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Телефон</label>
+          <input class="form-input" type="tel" placeholder="+7 (000) 000-00-00" id="ownerPhone">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Питомец</label>
+          <select class="form-select" id="petSelect">
+            <option value="">— Выберите питомца —</option>
+            <option value="cat">🐱 Кошка / кот</option>
+            <option value="dog">🐶 Собака</option>
+            <option value="rabbit">🐰 Кролик</option>
+            <option value="bird">🦜 Птица</option>
+            <option value="other">🐾 Другое</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Кличка питомца</label>
+          <input class="form-input" type="text" placeholder="Мурзик" id="petName">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Врач</label>
+          <select class="form-select" id="doctorSelect">
+            <option value="">— Любой доступный —</option>
+            <option value="1">Смирнова Е.В. — терапевт</option>
+            <option value="2">Козлов А.Р. — хирург</option>
+            <option value="3">Фёдорова М.С. — дерматолог</option>
+            <option value="4">Громов Н.П. — стоматолог</option>
+            <option value="5">Белова Т.И. — терапевт</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Выберите дату</label>
+          <div class="date-row" id="dateRow"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Выберите время</label>
+          <div class="schedule-grid" id="timeGrid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Жалобы / причина визита</label>
+          <textarea class="form-textarea" placeholder="Опишите кратко проблему..." id="complaint"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitRecord()">✅ Записаться</button>
+      </div>
+    </div>
+
+    <!-- PETS PAGE -->
+    <div class="page" id="page-pets">
+      <div class="section-title">Мои питомцы</div>
+
+      <div id="petsList">
+        <div class="pet-card" onclick="openPetDetail('Мурзик','Британская короткошёрстная','🐱','3 года','Кастрирован')">
+          <div class="pet-avatar">🐱</div>
+          <div class="pet-info">
+            <div class="pet-name">Мурзик</div>
+            <div class="pet-breed">Британская короткошёрстная · 3 года</div>
+            <div><span class="badge badge-green">Здоров</span></div>
+          </div>
+        </div>
+        <div class="pet-card" onclick="openPetDetail('Рекс','Немецкая овчарка','🐶','5 лет','Кастрирован')">
+          <div class="pet-avatar">🐶</div>
+          <div class="pet-info">
+            <div class="pet-name">Рекс</div>
+            <div class="pet-breed">Немецкая овчарка · 5 лет</div>
+            <div><span class="badge badge-yellow">Вакцинация через 14 дней</span></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="openModal('addPetModal')" style="margin-top:4px">
+        + Добавить питомца
+      </button>
+    </div>
+
+    <!-- DOCTOR PAGE -->
+    <div class="page" id="page-doctor">
+      <div class="section-title">Панель врача</div>
+
+      <div class="role-switcher">
+        <button class="role-btn active" onclick="switchDoctorTab('today', this)">Сегодня</button>
+        <button class="role-btn" onclick="switchDoctorTab('all', this)">Все записи</button>
+        <button class="role-btn" onclick="switchDoctorTab('stats', this)">Статистика</button>
+      </div>
+
+      <div id="doctorTab-today">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-num">8</div><div class="stat-lbl">Приёмов сегодня</div></div>
+          <div class="stat-card"><div class="stat-num">3</div><div class="stat-lbl">Ожидают</div></div>
+          <div class="stat-card"><div class="stat-num">5</div><div class="stat-lbl">Завершено</div></div>
+        </div>
+        <div class="card">
+          <div class="appt-item">
+            <div class="appt-avatar">🐱</div>
+            <div class="appt-info">
+              <div class="appt-name">Мурзик · Иванова А.А.</div>
+              <div class="appt-sub">Плановый осмотр · +7 900 000-00-01</div>
+            </div>
+            <div style="text-align:right">
+              <div class="appt-time">10:00</div>
+              <div class="badge badge-green">Завершён</div>
+            </div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-avatar">🐶</div>
+            <div class="appt-info">
+              <div class="appt-name">Рекс · Петров В.С.</div>
+              <div class="appt-sub">Вакцинация · +7 900 000-00-02</div>
+            </div>
+            <div style="text-align:right">
+              <div class="appt-time">11:30</div>
+              <div class="badge badge-yellow">Ожидает</div>
+            </div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-avatar">🐰</div>
+            <div class="appt-info">
+              <div class="appt-name">Пуговка · Сидорова Н.Р.</div>
+              <div class="appt-sub">Осмотр уха · +7 900 000-00-03</div>
+            </div>
+            <div style="text-align:right">
+              <div class="appt-time">13:00</div>
+              <div class="badge badge-blue">Новая</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="doctorTab-all" style="display:none">
+        <div class="card">
+          <p style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">
+            Все записи за текущую неделю
+          </p>
+          <div class="appt-item">
+            <div class="appt-avatar">🐱</div>
+            <div class="appt-info">
+              <div class="appt-name">Мурзик</div>
+              <div class="appt-sub">Пн 10:00 · Осмотр</div>
+            </div>
+            <span class="badge badge-green">Готово</span>
+          </div>
+          <div class="appt-item">
+            <div class="appt-avatar">🐶</div>
+            <div class="appt-info">
+              <div class="appt-name">Рекс</div>
+              <div class="appt-sub">Пт 14:30 · Вакцинация</div>
+            </div>
+            <span class="badge badge-yellow">Ожидает</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="doctorTab-stats" style="display:none">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-num">42</div><div class="stat-lbl">За неделю</div></div>
+          <div class="stat-card"><div class="stat-num">187</div><div class="stat-lbl">За месяц</div></div>
+          <div class="stat-card"><div class="stat-num">4.9</div><div class="stat-lbl">Рейтинг</div></div>
+        </div>
+        <div class="card">
+          <div class="info-row"><span class="lbl">Осмотры</span><span class="val">48%</span></div>
+          <div class="info-row"><span class="lbl">Вакцинация</span><span class="val">22%</span></div>
+          <div class="info-row"><span class="lbl">Хирургия</span><span class="val">15%</span></div>
+          <div class="info-row"><span class="lbl">Прочее</span><span class="val">15%</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Call -->
+<div class="modal-overlay" id="callModal" onclick="closeModalOutside(event,'callModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📞 Контакты</div>
+    <div class="card" style="box-shadow:none;background:var(--cream)">
+      <div class="info-row"><span class="lbl">Основной</span><span class="val">+7 (347) 000-00-00</span></div>
+      <div class="info-row"><span class="lbl">WhatsApp</span><span class="val">+7 (347) 000-00-00</span></div>
+      <div class="info-row"><span class="lbl">Telegram</span><span class="val">@lapahvost_ufa</span></div>
+    </div>
+    <a href="tel:+73470000000" class="btn btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:12px">
+      Позвонить
+    </a>
+    <button class="btn btn-secondary" onclick="closeModal('callModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- MODAL: Address -->
+<div class="modal-overlay" id="addressModal" onclick="closeModalOutside(event,'addressModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📍 Адрес клиники</div>
+    <div class="card" style="box-shadow:none;background:var(--cream)">
+      <div class="info-row"><span class="lbl">Улица</span><span class="val">ул. Примерная, 1</span></div>
+      <div class="info-row"><span class="lbl">Город</span><span class="val">Уфа</span></div>
+      <div class="info-row"><span class="lbl">Ориентир</span><span class="val">рядом с ТЦ Пример</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeModal('addressModal')">Понятно</button>
+  </div>
+</div>
+
+<!-- MODAL: Add Pet -->
+<div class="modal-overlay" id="addPetModal" onclick="closeModalOutside(event,'addPetModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🐾 Добавить питомца</div>
+    <div class="form-group">
+      <label class="form-label">Кличка</label>
+      <input class="form-input" type="text" placeholder="Барсик" id="newPetName">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Вид</label>
+      <select class="form-select" id="newPetType">
+        <option value="🐱">🐱 Кошка</option>
+        <option value="🐶">🐶 Собака</option>
+        <option value="🐰">🐰 Кролик</option>
+        <option value="🦜">🦜 Птица</option>
+        <option value="🐾">🐾 Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Порода</label>
+      <input class="form-input" type="text" placeholder="Дворняжка" id="newPetBreed">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Возраст</label>
+      <input class="form-input" type="text" placeholder="2 года" id="newPetAge">
+    </div>
+    <button class="btn btn-primary" onclick="addPet()">Добавить</button>
+    <button class="btn btn-secondary" onclick="closeModal('addPetModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- MODAL: Pet Detail -->
+<div class="modal-overlay" id="petDetailModal" onclick="closeModalOutside(event,'petDetailModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:52px" id="detailEmoji">🐱</div>
+      <div class="modal-title" style="text-align:center;margin-bottom:4px" id="detailName">Мурзик</div>
+      <div style="color:var(--text-muted);font-size:13px" id="detailBreed">Британская</div>
+    </div>
+    <div class="card" style="box-shadow:none;background:var(--cream)">
+      <div class="info-row"><span class="lbl">Возраст</span><span class="val" id="detailAge">3 года</span></div>
+      <div class="info-row"><span class="lbl">Статус</span><span class="val" id="detailStatus">Кастрирован</span></div>
+      <div class="info-row"><span class="lbl">Последний визит</span><span class="val">14.04.2026</span></div>
+      <div class="info-row"><span class="lbl">Следующая вакцинация</span><span class="val">14.07.2026</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeModal('petDetailModal');showPage('record',document.querySelectorAll(\'.nav-btn\')[1])">
+      📅 Записать на приём
+    </button>
+    <button class="btn btn-secondary" onclick="closeModal('petDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- MODAL: Role -->
+<div class="modal-overlay" id="roleModal" onclick="closeModalOutside(event,'roleModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Выберите роль</div>
+    <button class="btn btn-primary" style="margin-bottom:8px" onclick="setRole('client')">👤 Я — клиент</button>
+    <button class="btn btn-secondary" onclick="setRole('doctor')">👨‍⚕️ Я — врач / персонал</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// SPLASH
+setTimeout(() => {
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(() => {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+  }, 500);
+}, 1800);
+
+// NAV
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// MODALS
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeModalOutside(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+function toggleRoleModal() { openModal('roleModal'); }
+function setRole(r) {
+  closeModal('roleModal');
+  document.getElementById('roleLabel').textContent = r === 'doctor' ? 'Врач' : 'Клиент';
+  showToast(r === 'doctor' ? '👨‍⚕️ Режим врача активирован' : '👤 Режим клиента активирован');
+}
+
+// TOAST
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// DATES
+function buildDates() {
+  const row = document.getElementById('dateRow');
+  const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const now = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i);
+    const chip = document.createElement('div');
+    chip.className = 'date-chip' + (i === 0 ? ' selected' : '');
+    chip.innerHTML = `<div class="day-name">${days[d.getDay()]}</div><div class="day-num">${d.getDate()}</div>`;
+    chip.onclick = () => {
+      document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      buildTimes();
+    };
+    row.appendChild(chip);
+  }
+}
+
+function buildTimes() {
+  const grid = document.getElementById('timeGrid');
+  grid.innerHTML = '';
+  const slots = ['9:00','9:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','16:00'];
+  const busy = [1, 4, 7];
+  slots.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'time-slot' + (busy.includes(i) ? ' busy' : '');
+    el.textContent = t;
+    el.onclick = () => {
+      if (el.classList.contains('busy')) return;
+      document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+    };
+    grid.appendChild(el);
+  });
+}
+
+buildDates();
+buildTimes();
+
+// SUBMIT
+function submitRecord() {
+  const name = document.getElementById('ownerName').value.trim();
+  const phone = document.getElementById('ownerPhone').value.trim();
+  const pet = document.getElementById('petName').value.trim();
+  const selected = document.querySelector('.time-slot.selected');
+  const date = document.querySelector('.date-chip.selected');
+
+  if (!name || !phone || !pet) {
+    showToast('⚠️ Заполните имя, телефон и кличку');
+    return;
+  }
+  if (!selected) {
+    showToast('⚠️ Выберите время приёма');
+    return;
+  }
+
+  showToast(`✅ Запись оформлена! ${date ? date.querySelector('.day-num').textContent : ''} в ${selected.textContent}`);
+
+  // Reset
+  ['ownerName','ownerPhone','petName','complaint'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+
+  setTimeout(() => showPage('home', document.querySelectorAll('.nav-btn')[0]), 1200);
+}
+
+// PETS
+function openPetDetail(name, breed, emoji, age, status) {
+  document.getElementById('detailName').textContent = name;
+  document.getElementById('detailBreed').textContent = breed;
+  document.getElementById('detailEmoji').textContent = emoji;
+  document.getElementById('detailAge').textContent = age;
+  document.getElementById('detailStatus').textContent = status;
+  openModal('petDetailModal');
+}
+
+function addPet() {
+  const name = document.getElementById('newPetName').value.trim();
+  const type = document.getElementById('newPetType').value;
+  const breed = document.getElementById('newPetBreed').value.trim() || 'Порода не указана';
+  const age = document.getElementById('newPetAge').value.trim() || '—';
+  if (!name) { showToast('⚠️ Введите кличку'); return; }
+
+  const list = document.getElementById('petsList');
+  const card = document.createElement('div');
+  card.className = 'pet-card';
+  card.innerHTML = `
+    <div class="pet-avatar">${type}</div>
+    <div class="pet-info">
+      <div class="pet-name">${name}</div>
+      <div class="pet-breed">${breed} · ${age}</div>
+      <div><span class="badge badge-blue">Новый</span></div>
+    </div>`;
+  card.onclick = () => openPetDetail(name, breed, type, age, '—');
+  list.appendChild(card);
+
+  ['newPetName','newPetBreed','newPetAge'].forEach(id => document.getElementById(id).value = '');
+  closeModal('addPetModal');
+  showToast(`🐾 ${name} добавлен!`);
+}
+
+// DOCTOR TABS
+function switchDoctorTab(tab, btn) {
+  ['today','all','stats'].forEach(t => {
+    document.getElementById('doctorTab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
