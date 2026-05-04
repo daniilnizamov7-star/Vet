@@ -99,15 +99,15 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
   box-shadow:0 2px 16px rgba(37,99,235,.3);
 }
 .header.role-admin {
-  background:linear-gradient(135deg,#111827 0%,#1f2937 100%);
-  box-shadow:0 2px 16px rgba(0,0,0,.4);
+  background:linear-gradient(135deg,#065f46 0%,#047857 100%);
+  box-shadow:0 2px 16px rgba(4,120,87,.35);
 }
 .header.role-doctor .live-dot { background:#60a5fa; }
-.header.role-admin .live-dot { background:#f59e0b; }
+.header.role-admin .live-dot { background:#6ee7b7; }
 .header.role-doctor .header-user { background:#60a5fa; color:#1e3a8a; }
-.header.role-admin .header-user { background:#f59e0b; color:#111827; }
+.header.role-admin .header-user { background:#6ee7b7; color:#065f46; }
 .header.role-doctor .nav-btn.active { color:#bfdbfe; border-bottom-color:#60a5fa; }
-.header.role-admin .nav-btn.active { color:#fcd34d; border-bottom-color:#f59e0b; }
+.header.role-admin .nav-btn.active { color:#6ee7b7; border-bottom-color:#6ee7b7; }
 /* Роль-бейдж под логотипом */
 .role-badge {
   display:none; font-size:10px; font-weight:700;
@@ -382,6 +382,24 @@ select { background-image:none; }
 }
 .filter-btn.active { background:var(--p); color:#fff; border-color:var(--p); }
 
+/* ── REMINDERS ── */
+.reminder-item {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 0; border-bottom:1px solid var(--bg2);
+}
+.reminder-item:last-child { border-bottom:none; }
+.reminder-ico {
+  width:40px; height:40px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.reminder-ico.overdue { background:#fee2e2; }
+.reminder-ico.soon { background:#fef3c7; }
+.reminder-ico.ok { background:#dcfce7; }
+.reminder-info { flex:1; min-width:0; }
+.reminder-title { font-weight:700; font-size:14px; margin-bottom:2px; }
+.reminder-date { font-size:12px; color:var(--muted); }
+.reminder-done { opacity:.5; text-decoration:line-through; }
+
 /* ── DOCTOR CARD ── */
 .doc-card {
   background:var(--white); border-radius:var(--r);
@@ -477,10 +495,18 @@ select { background-image:none; }
       </div>
 
       <div class="quick" id="quickAdmin" style="display:none">
-        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('today',document.querySelectorAll('.rtab')[0])"><span class="ico">📋</span><span class="lbl">Все записи сегодня</span></button>
-        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('all',document.querySelectorAll('.rtab')[1])"><span class="ico">🗓️</span><span class="lbl">Записать клиента</span></button>
-        <button class="qa" onclick="goPage('pets',document.querySelectorAll('.nav-btn')[2])"><span class="ico">🐾</span><span class="lbl">Все питомцы</span></button>
-        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('stats',document.querySelectorAll('.rtab')[2])"><span class="ico">📊</span><span class="lbl">Статистика</span></button>
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('today',document.querySelectorAll('.rtab')[0])"><span class="ico">📋</span><span class="lbl">Записи сегодня</span></button>
+        <button class="qa" onclick="openAdminBookModal()"><span class="ico">➕</span><span class="lbl">Записать клиента</span></button>
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));setTimeout(()=>switchStaffTab('clients',document.getElementById('tabClients')),100)"><span class="ico">👥</span><span class="lbl">Клиенты</span></button>
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));setTimeout(()=>switchStaffTab('stats',document.querySelectorAll('.rtab')[3]),100)"><span class="ico">📊</span><span class="lbl">Статистика</span></button>
+      </div>
+
+      <!-- Напоминания клиента -->
+      <div id="clientRemindersSection" style="display:none">
+        <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+          Напоминания <span id="remindersCount" class="badge b-red" style="display:none"></span>
+        </div>
+        <div class="card" id="clientRemindersList"></div>
       </div>
 
       <div class="sec-title">Ближайшие записи <span id="upcomingCount"></span></div>
@@ -562,7 +588,8 @@ select { background-image:none; }
       <div class="sec-title" id="staffPanelTitle">Панель</div>
       <div class="rtabs" id="staffTabs">
         <button class="rtab active" onclick="switchStaffTab('today',this)">Сегодня</button>
-        <button class="rtab" onclick="switchStaffTab('all',this)">Все записи</button>
+        <button class="rtab" onclick="switchStaffTab('all',this)">Записи</button>
+        <button class="rtab" id="tabClients" style="display:none" onclick="switchStaffTab('clients',this)">Клиенты</button>
         <button class="rtab" id="tabStats" onclick="switchStaffTab('stats',this)">Статистика</button>
         <button class="rtab" id="tabDoctors" style="display:none" onclick="switchStaffTab('doctors',this)">Врачи</button>
       </div>
@@ -607,6 +634,21 @@ select { background-image:none; }
           <div class="ir"><span class="lbl">Всего клиентов</span><span class="val" id="sd-clients">0</span></div>
           <div class="ir"><span class="lbl">Всего питомцев</span><span class="val" id="sd-pets">0</span></div>
         </div>
+      </div>
+
+      <!-- CLIENTS (admin only) -->
+      <div id="staffTab-clients" style="display:none">
+        <div style="margin-bottom:12px">
+          <input class="fi" type="text" id="clientSearchInput"
+            placeholder="🔍 Поиск по имени или телефону..."
+            oninput="searchClients()">
+        </div>
+        <div id="clientsStats" style="display:flex;gap:8px;margin-bottom:12px">
+          <div class="stat" style="flex:1"><div class="stat-n" id="cs-total">0</div><div class="stat-l">Клиентов</div></div>
+          <div class="stat" style="flex:1"><div class="stat-n" id="cs-pets">0</div><div class="stat-l">Питомцев</div></div>
+          <div class="stat" style="flex:1"><div class="stat-n" id="cs-new">0</div><div class="stat-l">Новых</div></div>
+        </div>
+        <div id="clientsList"></div>
       </div>
 
       <!-- DOCTORS (admin only) -->
@@ -674,6 +716,9 @@ select { background-image:none; }
       <div class="ir"><span class="lbl">Пол</span><span class="val" id="pd-gender"></span></div>
       <div class="ir"><span class="lbl">Последний визит</span><span class="val" id="pd-last">—</span></div>
     </div>
+    <div class="sec-title" style="margin-top:16px">Напоминания</div>
+    <div id="pd-reminders"></div>
+    <button class="btn btn-ghost" style="margin-bottom:4px;font-family:Nunito,sans-serif;font-size:13px" onclick="openAddReminder()">+ Добавить напоминание</button>
     <div id="pd-visits-title" class="sec-title" style="margin-top:16px">История визитов</div>
     <div id="pd-visits"></div>
     <button class="btn btn-y" onclick="closeModal('modalPetDetail');goPage('book',document.querySelectorAll('.nav-btn')[1])">📅 Записать на приём</button>
@@ -700,6 +745,28 @@ select { background-image:none; }
   </div>
 </div>
 
+<!-- MODAL: Добавить напоминание -->
+<div class="overlay" id="modalAddReminder" onclick="closeOuter(event,'modalAddReminder')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔔 Напоминание</div>
+    <input type="hidden" id="remPetId">
+    <div class="fg">
+      <label class="fl">Тип</label>
+      <select class="fs" id="remType">
+        <option value="vaccine">💉 Вакцинация</option>
+        <option value="antiparasitic">🐛 Обработка от паразитов</option>
+        <option value="checkup">🩺 Плановый осмотр</option>
+        <option value="other">📋 Другое</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Название</label><input class="fi" id="remTitle" placeholder="Вакцина от бешенства"></div>
+    <div class="fg"><label class="fl">Дата</label><input class="fi" type="date" id="remDate"></div>
+    <button class="btn btn-y" onclick="saveReminder()">Сохранить</button>
+    <button class="btn btn-ghost" onclick="closeModal('modalAddReminder')">Отмена</button>
+  </div>
+</div>
+
 <div class="overlay" id="modalUser" onclick="closeOuter(event,'modalUser')">
   <div class="modal"><div class="modal-handle"></div><div class="modal-title">👤 Профиль</div>
     <div class="card" style="box-shadow:none;background:var(--bg2)" id="userCard"></div>
@@ -707,6 +774,74 @@ select { background-image:none; }
     <button class="btn btn-ghost" onclick="closeModal('modalUser')">Закрыть</button>
   </div>
 </div>
+
+
+<!-- MODAL: Диагноз после приёма (врач/админ) -->
+<div class="overlay" id="modalDiagnosis" onclick="closeOuter(event,'modalDiagnosis')">
+  <div class="modal"><div class="modal-handle"></div>
+    <div class="modal-title">🩺 Результат приёма</div>
+    <input type="hidden" id="diagApptId">
+    <input type="hidden" id="diagPetId">
+    <div class="fg"><label class="fl">Диагноз</label><input class="fi" id="diagDiagnosis" placeholder="Например: ОРВИ, гастрит..."></div>
+    <div class="fg"><label class="fl">Лечение</label><textarea class="ft" id="diagTreatment" placeholder="Описание лечения..."></textarea></div>
+    <div class="fg"><label class="fl">Назначения</label><textarea class="ft" id="diagPrescriptions" placeholder="Препараты, дозировки..."></textarea></div>
+    <div style="display:flex;gap:10px">
+      <div class="fg" style="flex:1"><label class="fl">Вес (кг)</label><input class="fi" type="number" id="diagWeight" placeholder="4.5"></div>
+      <div class="fg" style="flex:1"><label class="fl">Температура</label><input class="fi" type="number" id="diagTemp" placeholder="38.5"></div>
+    </div>
+    <div class="fg"><label class="fl">Следующий визит</label><input class="fi" type="date" id="diagNextVisit"></div>
+    <div class="fg"><label class="fl">Заметки</label><textarea class="ft" id="diagNotes" placeholder="Дополнительно..."></textarea></div>
+    <button class="btn btn-y" onclick="saveDiagnosis()">💾 Сохранить</button>
+    <button class="btn btn-ghost" onclick="closeModal('modalDiagnosis')">Отмена</button>
+  </div>
+</div>
+
+<!-- MODAL: Профиль клиента (админ) -->
+<div class="overlay" id="modalClientProfile" onclick="closeOuter(event,'modalClientProfile')">
+  <div class="modal"><div class="modal-handle"></div>
+    <div class="modal-title">👤 Профиль клиента</div>
+    <div class="card" style="box-shadow:none;background:var(--bg2)" id="cpInfo"></div>
+    <div class="sec-title" style="margin-top:16px">Питомцы <span id="cpPetsCount"></span></div>
+    <div id="cpPets"></div>
+    <div class="sec-title" style="margin-top:8px">История визитов</div>
+    <div id="cpHistory"></div>
+    <button class="btn btn-y" style="margin-top:8px" onclick="bookForClient()">📅 Записать на приём</button>
+    <button class="btn btn-ghost" onclick="closeModal('modalClientProfile')">Закрыть</button>
+  </div>
+</div>
+
+<!-- MODAL: Запись клиента администратором -->
+<div class="overlay" id="modalAdminBook" onclick="closeOuter(event,'modalAdminBook')">
+  <div class="modal"><div class="modal-handle"></div>
+    <div class="modal-title">📅 Записать клиента</div>
+    <div class="fg"><label class="fl">Имя клиента</label><input class="fi" id="abName" placeholder="Иванова Анна"></div>
+    <div class="fg"><label class="fl">Телефон</label><input class="fi" type="tel" id="abPhone" placeholder="+7 (000) 000-00-00"></div>
+    <div class="fg"><label class="fl">Питомец (кличка)</label><input class="fi" id="abPetName" placeholder="Мурзик"></div>
+    <div class="fg"><label class="fl">Вид питомца</label>
+      <select class="fs" id="abPetType">
+        <option value="🐱">🐱 Кошка</option><option value="🐶">🐶 Собака</option>
+        <option value="🐰">🐰 Кролик</option><option value="🦜">🦜 Птица</option><option value="🐾">🐾 Другое</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Врач</label>
+      <select class="fs" id="abDoctor"><option value="">— Любой —</option></select>
+    </div>
+    <div class="fg"><label class="fl">Дата</label><input class="fi" type="date" id="abDate"></div>
+    <div class="fg"><label class="fl">Время</label>
+      <select class="fs" id="abTime">
+        <option>9:00</option><option>9:30</option><option>10:00</option><option>10:30</option>
+        <option>11:00</option><option>11:30</option><option>13:00</option><option>13:30</option>
+        <option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option>
+        <option>16:00</option><option>16:30</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Жалоба</label><textarea class="ft" id="abComplaint" placeholder="Причина визита..."></textarea></div>
+    <button class="btn btn-y" onclick="submitAdminBooking()">✅ Записать</button>
+    <button class="btn btn-ghost" onclick="closeModal('modalAdminBook')">Отмена</button>
+  </div>
+</div>
+
+
 
 <div class="toast" id="toast"></div>
 
@@ -843,13 +978,29 @@ function showApp() {
   if (currentUser.role !== 'client') {
     document.getElementById('navStaff').style.display = '';
     document.getElementById('tabDoctors').style.display = currentUser.role === 'admin' ? '' : 'none';
+    document.getElementById('tabClients').style.display = currentUser.role === 'admin' ? '' : 'none';
     document.getElementById('staffPanelTitle').textContent = currentUser.role === 'admin' ? 'Панель администратора' : 'Панель врача';
     pageHistory = ['home'];
     goPage('home', document.querySelectorAll('.nav-btn')[0]);
   }
   loadUpcoming();
   loadDoctorsPublic();
+  if (currentUser.role === 'client') loadClientReminders();
   if (currentUser.role !== 'client') loadTodayAppointments();
+}
+
+function openAdminBookModal() {
+  const dateEl = document.getElementById('abDate');
+  if (!dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+  const sel = document.getElementById('abDoctor');
+  sel.innerHTML = '<option value="">— Любой —</option>';
+  doctors.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id;
+    o.textContent = d.name + (d.specialty ? ' — ' + d.specialty : '');
+    sel.appendChild(o);
+  });
+  openModal('modalAdminBook');
 }
 
 function applyRoleUI() {
@@ -862,6 +1013,10 @@ function applyRoleUI() {
 
   // Врачи на главной — только клиенту
   document.getElementById('doctorsSection').style.display = isClient ? 'block' : 'none';
+
+  // Вкладка клиентов — только для админа
+  const tabClients = document.getElementById('tabClients');
+  if (tabClients) tabClients.style.display = isAdmin ? '' : 'none';
 
   // Питомцы
   document.getElementById('petsTitle').textContent = isAdmin ? 'Все питомцы клиники' : isClient ? 'Мои питомцы' : 'Питомцы';
@@ -1218,7 +1373,7 @@ async function loadUpcoming() {
   const list = document.getElementById('upcomingList');
   try {
     let q = sb.from('appointments').select(`
-      id, date, time, status, complaint,
+      id, date, time, status, complaint, client_id,
       pets(name, type),
       staff(name, specialty)
     `).eq('clinic_id', CLINIC_ID)
@@ -1353,6 +1508,8 @@ async function addPet() {
 }
 
 async function openPetDetail(petId) {
+  currentReminderPetId = petId;
+  document.getElementById('remPetId').value = petId;
   try {
     const { data: p } = await sb.from('pets').select('*').eq('id', petId).single();
     document.getElementById('pd-ico').textContent = p.type || '🐾';
@@ -1360,6 +1517,7 @@ async function openPetDetail(petId) {
     document.getElementById('pd-breed').textContent = p.breed || 'Порода не указана';
     document.getElementById('pd-year').textContent = p.birth_year || '—';
     document.getElementById('pd-gender').textContent = p.gender === 'male' ? 'Мальчик' : p.gender === 'female' ? 'Девочка' : '—';
+    loadReminders(petId);
 
     const { data: visits } = await sb.from('pet_visits').select('*,staff(name)').eq('pet_id', petId).order('visit_date', {ascending:false}).limit(5);
     const vlist = document.getElementById('pd-visits');
@@ -1384,7 +1542,7 @@ async function openPetDetail(petId) {
 // STAFF PANEL
 // ══════════════════════════════════════════
 function switchStaffTab(tab, btn) {
-  ['today','all','stats','doctors'].forEach(t => {
+  ['today','all','clients','stats','doctors'].forEach(t => {
     const el = document.getElementById('staffTab-' + t);
     if (el) el.style.display = t === tab ? 'block' : 'none';
   });
@@ -1397,6 +1555,7 @@ function switchStaffTab(tab, btn) {
   }
   if (tab === 'today') { loadTodayAppointments(); }
   if (tab === 'stats') { loadStats(); }
+  if (tab === 'clients') { loadClients(); }
   if (tab === 'doctors') { loadDoctorsList(); }
 }
 
@@ -1404,8 +1563,8 @@ async function loadTodayAppointments() {
   const today = new Date().toISOString().split('T')[0];
   try {
     let q = sb.from('appointments').select(`
-      id, date, time, status, complaint,
-      clients(name, phone),
+      id, date, time, status, complaint, pet_id,
+      clients(id, name, phone),
       pets(name, type),
       staff(name)
     `).eq('clinic_id', CLINIC_ID).eq('date', today).order('time');
@@ -1430,14 +1589,18 @@ async function loadTodayAppointments() {
 // Рендер карточки записи с кнопками действий
 function renderApptCard(a) {
   const phone = a.clients?.phone || '';
+  const clientId = a.client_id || '';
   const actions = buildActionBtns(a);
+  const isStaff = currentUser?.role !== 'client';
   return `
     <div class="appt-card status-${a.status}">
       <div class="appt-card-top">
         <div class="appt-card-ava">${a.pets?.type || '🐾'}</div>
         <div class="appt-card-info">
           <div class="appt-card-name">${a.pets?.name || '—'}</div>
-          <div class="appt-card-sub">${a.clients?.name || '—'} · ${phone}</div>
+          <div class="appt-card-sub" style="cursor:${isStaff&&clientId?'pointer':'default'}"
+            onclick="${isStaff&&clientId?`openClientProfile('${clientId}')`:''}"
+          >${a.clients?.name || '—'} · ${phone}</div>
         </div>
         <div class="appt-card-time">${(a.time||'').slice(0,5)}</div>
       </div>
@@ -1448,6 +1611,7 @@ function renderApptCard(a) {
       ${a.complaint ? `<div class="appt-card-complaint">💬 ${a.complaint}</div>` : ''}
       <div class="appt-card-actions">
         ${phone ? `<button class="act-btn act-call" onclick="window.location.href='tel:${phone}'">📞 Позвонить</button>` : ''}
+        ${isStaff&&clientId ? `<button class="act-btn act-restore" onclick="openClientProfile('${clientId}')">👤 Клиент</button>` : ''}
         ${actions}
       </div>
     </div>`;
@@ -1455,6 +1619,7 @@ function renderApptCard(a) {
 
 function buildActionBtns(a) {
   const id = a.id;
+  const petId = a.pet_id || a.pets?.id || '';
   let btns = '';
   if (a.status === 'pending') {
     btns += `<button class="act-btn act-confirm" onclick="quickStatus('${id}','confirmed',event)">✓ Подтвердить</button>`;
@@ -1463,11 +1628,286 @@ function buildActionBtns(a) {
     btns += `<button class="act-btn act-done" onclick="quickStatus('${id}','done',event)">✓ Завершить</button>`;
     btns += `<button class="act-btn act-cancel" onclick="quickStatus('${id}','cancelled',event)">✗ Отменить</button>`;
   } else if (a.status === 'done') {
-    btns += `<span style="font-size:12px;color:#166534;font-weight:700">✓ Приём завершён</span>`;
+    btns += `<button class="act-btn act-confirm" onclick="openDiagnosis('${id}','${petId}',event)">🩺 Диагноз</button>`;
+    btns += `<span style="font-size:11px;color:#166534;font-weight:700;align-self:center">✓ Завершён</span>`;
   } else if (a.status === 'cancelled') {
     btns += `<button class="act-btn act-restore" onclick="quickStatus('${id}','pending',event)">↩ Восстановить</button>`;
   }
   return btns;
+}
+
+// ══════════════════════════════════════════
+// ДИАГНОЗ
+// ══════════════════════════════════════════
+function openDiagnosisModal(apptId, petId, e) {
+  if (e) e.stopPropagation();
+  document.getElementById('diagApptId').value = apptId;
+  document.getElementById('diagPetId').value = petId;
+  ['diagDiagnosis','diagTreatment','diagPrescriptions','diagWeight','diagTemp','diagNextVisit']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  openModal('modalDiagnosis');
+}
+
+async function saveDiagnosis() {
+  const apptId = document.getElementById('diagApptId').value;
+  const petId = document.getElementById('diagPetId').value;
+  const diagnosis = document.getElementById('diagDiagnosis').value.trim();
+  const treatment = document.getElementById('diagTreatment').value.trim();
+  const prescriptions = document.getElementById('diagPrescriptions').value.trim();
+  const weight = parseFloat(document.getElementById('diagWeight').value) || null;
+  const temp = parseFloat(document.getElementById('diagTemp').value) || null;
+  const nextVisit = document.getElementById('diagNextVisit').value || null;
+
+  if (!diagnosis) { toast('⚠️ Введите диагноз'); return; }
+
+  try {
+    await sb.from('pet_visits').insert({
+      clinic_id: CLINIC_ID,
+      appointment_id: apptId,
+      pet_id: petId,
+      staff_id: currentUser.staffId || currentUser.id || null,
+      visit_date: new Date().toISOString().split('T')[0],
+      diagnosis, treatment, prescriptions,
+      weight, temperature: temp,
+      next_visit_date: nextVisit
+    });
+
+    // Автоматически создаём напоминание если указан следующий визит
+    if (nextVisit) await createReminderFromVisit(petId, nextVisit);
+
+    closeModal('modalDiagnosis');
+    loadTodayAppointments();
+    toast('✅ Диагноз сохранён!');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ══════════════════════════════════════════
+// НАПОМИНАНИЯ
+// ══════════════════════════════════════════
+let currentReminderPetId = null;
+
+function reminderIco(type) {
+  return { vaccine:'💉', antiparasitic:'🐛', checkup:'🩺', other:'📋' }[type] || '🔔';
+}
+
+function reminderStatus(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  const diff = Math.ceil((d - today) / 86400000);
+  if (diff < 0) return { cls:'overdue', label:'Просрочено на ' + Math.abs(diff) + ' дн.', badge:'b-red' };
+  if (diff <= 7) return { cls:'soon', label:'Через ' + diff + ' дн.', badge:'b-yellow' };
+  return { cls:'ok', label:'Через ' + diff + ' дн.', badge:'b-green' };
+}
+
+async function loadReminders(petId) {
+  try {
+    const { data } = await sb.from('reminders')
+      .select('*').eq('pet_id', petId)
+      .eq('is_done', false).order('due_date');
+    const list = document.getElementById('pd-reminders');
+    if (!data?.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Напоминаний нет</div>';
+      return;
+    }
+    list.innerHTML = '<div class="card" style="box-shadow:none;background:var(--bg2);padding:8px 12px">' +
+      data.map(r => {
+        const st = reminderStatus(r.due_date);
+        return `
+          <div class="reminder-item ${r.is_done ? 'reminder-done' : ''}">
+            <div class="reminder-ico ${st.cls}">${reminderIco(r.type)}</div>
+            <div class="reminder-info">
+              <div class="reminder-title">${r.title}</div>
+              <div class="reminder-date">${formatDateRu(r.due_date)} · <span class="badge ${st.badge}" style="font-size:10px">${st.label}</span></div>
+            </div>
+            ${!r.is_done ? `<button onclick="doneReminder('${r.id}')" style="background:none;border:none;font-size:18px;cursor:pointer">✓</button>` : ''}
+          </div>`;
+      }).join('') + '</div>';
+  } catch(e) {}
+}
+
+async function loadClientReminders() {
+  if (!currentUser || currentUser.role !== 'client') return;
+  try {
+    // Берём все питомцы клиента
+    const { data: pets } = await sb.from('pets').select('id').eq('client_id', currentUser.id);
+    if (!pets?.length) return;
+    const petIds = pets.map(p => p.id);
+    if (!petIds.length) return;
+
+    const { data } = await sb.from('reminders')
+      .select('*, pets(name,type)')
+      .in('pet_id', petIds)
+      .eq('is_done', false)
+      .order('due_date')
+      .limit(10);
+
+    if (!data?.length) return;
+
+    // Считаем просроченные и скоро
+    const urgent = data.filter(r => {
+      const st = reminderStatus(r.due_date);
+      return st.cls === 'overdue' || st.cls === 'soon';
+    });
+
+    const section = document.getElementById('clientRemindersSection');
+    const list = document.getElementById('clientRemindersList');
+    const cnt = document.getElementById('remindersCount');
+
+    section.style.display = 'block';
+    if (urgent.length) {
+      cnt.textContent = urgent.length;
+      cnt.style.display = 'inline';
+    }
+
+    list.innerHTML = data.map(r => {
+      const st = reminderStatus(r.due_date);
+      return `
+        <div class="reminder-item">
+          <div class="reminder-ico ${st.cls}">${reminderIco(r.type)}</div>
+          <div class="reminder-info">
+            <div class="reminder-title">${r.title} · ${r.pets?.name || ''}</div>
+            <div class="reminder-date">${formatDateRu(r.due_date)} · <span class="badge ${st.badge}" style="font-size:10px">${st.label}</span></div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+function openAddReminder() {
+  const dateEl = document.getElementById('remDate');
+  // Ставим дефолт через 30 дней
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  dateEl.value = d.toISOString().split('T')[0];
+  document.getElementById('remTitle').value = '';
+  openModal('modalAddReminder');
+}
+
+async function saveReminder() {
+  const petId = document.getElementById('remPetId').value || currentReminderPetId;
+  const type = document.getElementById('remType').value;
+  const title = document.getElementById('remTitle').value.trim();
+  const date = document.getElementById('remDate').value;
+  if (!title || !date) { toast('⚠️ Заполните название и дату'); return; }
+  try {
+    await sb.from('reminders').insert({ clinic_id: CLINIC_ID, pet_id: petId, type, title, due_date: date });
+    closeModal('modalAddReminder');
+    loadReminders(petId);
+    toast('🔔 Напоминание добавлено!');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function doneReminder(id) {
+  try {
+    await sb.from('reminders').update({ is_done: true }).eq('id', id);
+    toast('✅ Готово!');
+    if (currentReminderPetId) loadReminders(currentReminderPetId);
+    loadClientReminders();
+  } catch(e) {}
+}
+
+// Автосоздание напоминания из диагноза
+async function createReminderFromVisit(petId, nextDate, petName) {
+  if (!nextDate) return;
+  try {
+    await sb.from('reminders').insert({
+      clinic_id: CLINIC_ID, pet_id: petId,
+      type: 'checkup', title: 'Повторный осмотр',
+      due_date: nextDate
+    });
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+// ПРОФИЛЬ КЛИЕНТА (админ)
+// ══════════════════════════════════════════
+async function openClientProfile(clientId, e) {
+  if (e) e.stopPropagation();
+  try {
+    const [{ data: client }, { data: pets }, { data: history }] = await Promise.all([
+      sb.from('clients').select('*').eq('id', clientId).single(),
+      sb.from('pets').select('*').eq('client_id', clientId),
+      sb.from('appointments').select('*, pets(name,type), staff(name)')
+        .eq('client_id', clientId).order('date', {ascending:false}).limit(10)
+    ]);
+
+    document.getElementById('cpInfo').innerHTML = `
+      <div class="ir"><span class="lbl">Имя</span><span class="val">${client.name}</span></div>
+      <div class="ir"><span class="lbl">Телефон</span><span class="val">${client.phone}</span></div>
+      <div class="ir"><span class="lbl">С нами с</span><span class="val">${formatDateRu(client.created_at?.split('T')[0])}</span></div>
+    `;
+
+    document.getElementById('cpPets').innerHTML = pets?.length
+      ? pets.map(p => `
+          <div class="pet-card" style="margin-bottom:8px" onclick="openPetDetail('${p.id}')">
+            <div class="pet-ava">${p.type||'🐾'}</div>
+            <div><div class="pet-name">${p.name}</div>
+            <div class="pet-breed">${p.breed||'—'}</div></div>
+          </div>`).join('')
+      : '<div class="empty" style="padding:12px 0"><p>Питомцев нет</p></div>';
+
+    document.getElementById('cpHistory').innerHTML = history?.length
+      ? history.map(a => `
+          <div class="appt" style="cursor:default">
+            <div class="appt-ava">${a.pets?.type||'🐾'}</div>
+            <div class="appt-info">
+              <div class="appt-name">${a.pets?.name||'—'}</div>
+              <div class="appt-sub">${a.staff?.name||'—'}</div>
+            </div>
+            <div class="appt-meta">
+              <div class="appt-time">${formatDateShort(a.date)}</div>
+              <div style="margin-top:4px">${statusBadge(a.status)}</div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty" style="padding:12px 0"><p>Записей нет</p></div>';
+
+    // Сохраняем данные для записи
+    document.getElementById('abName').value = client.name;
+    document.getElementById('abPhone').value = client.phone;
+
+    openModal('modalClientProfile');
+  } catch(err) { toast('❌ ' + err.message); }
+}
+
+function bookForClient() {
+  closeModal('modalClientProfile');
+  openAdminBookModal();
+}
+
+async function submitAdminBooking() {
+  const name = document.getElementById('abName').value.trim();
+  const phone = document.getElementById('abPhone').value.trim();
+  const petType = document.getElementById('abPetType').value;
+  const petName = document.getElementById('abPetName').value.trim();
+  const doctorId = document.getElementById('abDoctor').value || null;
+  const date = document.getElementById('abDate').value;
+  const time = document.getElementById('abTime').value;
+  const complaint = document.getElementById('abComplaint').value.trim();
+
+  if (!name || !phone || !petName || !date) { toast('⚠️ Заполните все поля'); return; }
+
+  try {
+    let { data: client } = await sb.from('clients').select('id').eq('clinic_id', CLINIC_ID).eq('phone', phone).maybeSingle();
+    if (!client) {
+      const { data: nc } = await sb.from('clients').insert({ clinic_id: CLINIC_ID, name, phone }).select('id').single();
+      client = nc;
+    }
+    let { data: pet } = await sb.from('pets').select('id').eq('client_id', client.id).ilike('name', petName).maybeSingle();
+    if (!pet) {
+      const { data: np } = await sb.from('pets').insert({ client_id: client.id, clinic_id: CLINIC_ID, name: petName, type: petType }).select('id').single();
+      pet = np;
+    }
+    await sb.from('appointments').insert({
+      clinic_id: CLINIC_ID, client_id: client.id, pet_id: pet.id,
+      staff_id: doctorId, date, time: time + ':00', complaint, status: 'confirmed'
+    });
+
+    ['abName','abPhone','abPetName','abComplaint'].forEach(id => document.getElementById(id).value = '');
+    closeModal('modalAdminBook');
+    loadTodayAppointments();
+    loadAllAppointments();
+    loadUpcoming();
+    toast('✅ Клиент записан на ' + formatDateRu(date) + ' в ' + time);
+  } catch(err) { toast('❌ ' + err.message); }
 }
 
 // Быстрая смена статуса прямо из карточки (без открытия модалки)
@@ -1498,8 +1938,8 @@ async function loadAllAppointments() {
   const dateVal = fd.value;
   try {
     let q = sb.from('appointments').select(`
-      id, date, time, status, complaint,
-      clients(name, phone),
+      id, date, time, status, complaint, pet_id,
+      clients(id, name, phone),
       pets(name, type),
       staff(name)
     `).eq('clinic_id', CLINIC_ID).eq('date', dateVal).order('time');
@@ -1535,6 +1975,87 @@ async function loadStats() {
     document.getElementById('sd-clients').textContent = cl.count || 0;
     document.getElementById('sd-pets').textContent = pt.count || 0;
   } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+// КЛИЕНТЫ (админ)
+// ══════════════════════════════════════════
+let allClientsData = [];
+
+async function loadClients() {
+  const list = document.getElementById('clientsList');
+  list.innerHTML = '<div class="empty"><div class="ico">⏳</div><p>Загружаем...</p></div>';
+  try {
+    const [{ data: clients, count }, { data: pets }, { data: newClients }] = await Promise.all([
+      sb.from('clients').select('*', {count:'exact'}).eq('clinic_id', CLINIC_ID).order('created_at', {ascending:false}),
+      sb.from('pets').select('id', {count:'exact'}).eq('clinic_id', CLINIC_ID),
+      sb.from('clients').select('id', {count:'exact'}).eq('clinic_id', CLINIC_ID)
+        .gte('created_at', new Date(Date.now() - 30*86400000).toISOString()),
+    ]);
+
+    allClientsData = clients || [];
+    document.getElementById('cs-total').textContent = count || 0;
+    document.getElementById('cs-pets').textContent = pets?.length || 0;
+    document.getElementById('cs-new').textContent = newClients?.length || 0;
+
+    renderClientsList(allClientsData);
+  } catch(e) {
+    list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки</p></div>';
+  }
+}
+
+function renderClientsList(clients) {
+  const list = document.getElementById('clientsList');
+  if (!clients?.length) {
+    list.innerHTML = '<div class="empty"><div class="ico">👤</div><p>Клиентов пока нет</p></div>';
+    return;
+  }
+  list.innerHTML = clients.map(c => {
+    const initials = c.name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+    const daysAgo = Math.floor((Date.now() - new Date(c.created_at)) / 86400000);
+    const isNew = daysAgo <= 7;
+    return `
+      <div class="appt-card status-confirmed" style="cursor:pointer" onclick="openClientProfile('${c.id}')">
+        <div class="appt-card-top">
+          <div class="appt-card-ava" style="background:linear-gradient(135deg,var(--p),var(--pm));color:#fff;font-weight:800;font-size:15px">
+            ${initials}
+          </div>
+          <div class="appt-card-info">
+            <div class="appt-card-name">${c.name}</div>
+            <div class="appt-card-sub">${c.phone}</div>
+          </div>
+          <div style="text-align:right">
+            ${isNew ? '<span class="badge b-green" style="font-size:10px">Новый</span>' : ''}
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">${formatDateRu(c.created_at?.split('T')[0])}</div>
+          </div>
+        </div>
+        <div class="appt-card-actions">
+          <button class="act-btn act-confirm" onclick="openClientProfile('${c.id}',event)">👤 Профиль</button>
+          <button class="act-btn act-call" onclick="window.location.href='tel:${c.phone}';event.stopPropagation()">📞 Позвонить</button>
+          <button class="act-btn" style="background:var(--yp);color:#92400e;border:1px solid var(--yb)" onclick="quickBookForClient('${c.id}','${c.name}','${c.phone}',event)">📅 Записать</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function searchClients() {
+  const q = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+  if (!q) { renderClientsList(allClientsData); return; }
+  const filtered = allClientsData.filter(c =>
+    c.name?.toLowerCase().includes(q) ||
+    c.phone?.toLowerCase().includes(q)
+  );
+  renderClientsList(filtered);
+}
+
+function quickBookForClient(clientId, name, phone, e) {
+  if (e) e.stopPropagation();
+  openAdminBookModal();
+  // Подставляем данные клиента
+  setTimeout(() => {
+    document.getElementById('abName').value = name;
+    document.getElementById('abPhone').value = phone;
+  }, 50);
 }
 
 async function loadDoctorsList() {
@@ -1652,6 +2173,134 @@ function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════
+// ДИАГНОЗ — врач добавляет после приёма
+// ══════════════════════════════════════════
+function openDiagnosis(apptId, petId, e) {
+  if (e) e.stopPropagation();
+  document.getElementById('diagApptId').value = apptId;
+  document.getElementById('diagPetId').value = petId;
+  // Сбрасываем поля
+  ['diagDiagnosis','diagTreatment','diagPrescriptions','diagWeight','diagTemp','diagNextVisit','diagNotes']
+    .forEach(id => document.getElementById(id).value = '');
+  openModal('modalDiagnosis');
+}
+
+
+// ══════════════════════════════════════════
+// ПРОФИЛЬ КЛИЕНТА (для админа)
+// ══════════════════════════════════════════
+let currentClientId = null;
+
+async async function openClientProfile(clientId) {
+  currentClientId = clientId;
+  try {
+    const { data: c } = await sb.from('clients').select('*').eq('id', clientId).single();
+    document.getElementById('cpInfo').innerHTML = `
+      <div class="ir"><span class="lbl">Имя</span><span class="val">${c.name}</span></div>
+      <div class="ir"><span class="lbl">Телефон</span><span class="val"><a href="tel:${c.phone}" style="color:var(--p)">${c.phone}</a></span></div>
+      <div class="ir"><span class="lbl">Клиент с</span><span class="val">${formatDateRu(c.created_at?.split('T')[0])}</span></div>
+    `;
+
+    // Питомцы клиента
+    const { data: pets } = await sb.from('pets').select('*').eq('client_id', clientId);
+    document.getElementById('cpPetsCount').textContent = pets?.length || 0;
+    document.getElementById('cpPets').innerHTML = pets?.length
+      ? pets.map(p => `
+          <div class="pet-card" style="margin-bottom:8px" onclick="openPetDetail('${p.id}')">
+            <div class="pet-ava">${p.type || '🐾'}</div>
+            <div>
+              <div class="pet-name">${p.name}</div>
+              <div class="pet-breed">${p.breed || '—'} · ${p.birth_year ? new Date().getFullYear() - p.birth_year + ' лет' : '—'}</div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty" style="padding:12px 0"><p>Питомцев нет</p></div>';
+
+    // История записей
+    const { data: appts } = await sb.from('appointments')
+      .select('*,pets(name,type),staff(name)')
+      .eq('client_id', clientId)
+      .order('date', {ascending: false}).limit(10);
+
+    document.getElementById('cpHistory').innerHTML = appts?.length
+      ? appts.map(a => `
+          <div class="appt" style="cursor:pointer" onclick="openApptDetail('${a.id}')">
+            <div class="appt-ava">${a.pets?.type || '🐾'}</div>
+            <div class="appt-info">
+              <div class="appt-name">${a.pets?.name || '—'}</div>
+              <div class="appt-sub">${a.complaint || 'Без жалоб'} · ${a.staff?.name || '—'}</div>
+            </div>
+            <div class="appt-meta">
+              <div class="appt-time">${formatDateShort(a.date)}</div>
+              <div>${statusBadge(a.status)}</div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty" style="padding:12px 0"><p>Записей нет</p></div>';
+
+    openModal('modalClientProfile');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function openAdminBooking() {
+  // Заполняем врачей
+  const sel = document.getElementById('abDoctor');
+  sel.innerHTML = '<option value="">— Любой —</option>';
+  doctors.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id;
+    o.textContent = d.name + (d.specialty ? ' — ' + d.specialty : '');
+    sel.appendChild(o);
+  });
+  // Ставим сегодня по умолчанию
+  document.getElementById('abDate').value = new Date().toISOString().split('T')[0];
+  closeModal('modalClientProfile');
+  openModal('modalAdminBook');
+}
+
+// ══════════════════════════════════════════
+// ЗАПИСЬ КЛИЕНТА АДМИНИСТРАТОРОМ
+// ══════════════════════════════════════════
+
+
+// ══════════════════════════════════════════
+// СПИСОК КЛИЕНТОВ
+// ══════════════════════════════════════════
+let allClientsData = [];
+
+
+function renderClients(clients) {
+  const list = document.getElementById('clientsList');
+  if (!clients?.length) {
+    list.innerHTML = '<div class="empty"><div class="ico">👥</div><p>Клиентов нет</p></div>';
+    return;
+  }
+  list.innerHTML = clients.map(c => `
+    <div class="appt" onclick="openClientProfile('${c.id}');closeModal('modalClients')" style="cursor:pointer">
+      <div class="appt-ava" style="font-size:18px;background:var(--bg2)">👤</div>
+      <div class="appt-info">
+        <div class="appt-name">${c.name}</div>
+        <div class="appt-sub">${c.phone}</div>
+      </div>
+      <span style="font-size:12px;color:var(--muted)">${formatDateRu(c.created_at?.split('T')[0])}</span>
+    </div>
+  `).join('');
+}
+
+function searchClients() {
+  const q = document.getElementById('clientSearchInput').value.toLowerCase();
+  if (!q) { renderClients(allClientsData); return; }
+  const filtered = allClientsData.filter(c =>
+    c.name?.toLowerCase().includes(q) || c.phone?.includes(q)
+  );
+  renderClients(filtered);
+}
+
+// Открытие профиля клиента из карточки записи
+async function openClientFromAppt(clientId, e) {
+  if (e) e.stopPropagation();
+  await openClientProfile(clientId);
 }
 
 // PWA — регистрация + проверка обновлений
