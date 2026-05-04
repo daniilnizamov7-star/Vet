@@ -335,6 +335,69 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 
 a { text-decoration:none; }
 select { background-image:none; }
+
+/* ── APPT CARD (панель персонала) ── */
+.appt-card {
+  background:var(--white); border-radius:var(--r);
+  padding:14px 16px; margin-bottom:10px;
+  box-shadow:var(--shadow);
+  border-left:4px solid var(--bg3);
+  transition:var(--trans);
+}
+.appt-card.status-pending { border-left-color:var(--y); }
+.appt-card.status-confirmed { border-left-color:#3b82f6; }
+.appt-card.status-done { border-left-color:#22c55e; }
+.appt-card.status-cancelled { border-left-color:#ef4444; opacity:.6; }
+.appt-card-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.appt-card-ava {
+  width:42px; height:42px; border-radius:10px; flex-shrink:0;
+  background:var(--yp); border:2px solid var(--yb);
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.appt-card-info { flex:1; min-width:0; }
+.appt-card-name { font-weight:800; font-size:15px; }
+.appt-card-sub { font-size:12px; color:var(--muted); margin-top:1px; }
+.appt-card-time { font-family:'Russo One',sans-serif; font-size:18px; color:var(--p); flex-shrink:0; }
+.appt-card-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.appt-card-complaint { font-size:13px; color:var(--text); background:var(--bg2); padding:8px 12px; border-radius:8px; margin-bottom:10px; }
+.appt-card-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.act-btn {
+  flex:1; min-width:80px; padding:8px 10px; border:none; border-radius:10px;
+  font-family:'Nunito',sans-serif; font-size:12px; font-weight:800;
+  cursor:pointer; transition:var(--trans); text-align:center;
+}
+.act-btn:active { transform:scale(.96); }
+.act-confirm { background:#dbeafe; color:#1d4ed8; }
+.act-done { background:#dcfce7; color:#166534; }
+.act-cancel { background:#fee2e2; color:#dc2626; }
+.act-restore { background:#f3f4f6; color:#374151; }
+.act-call { background:var(--yp); color:#92400e; border:1px solid var(--yb); }
+
+/* ── FILTER BUTTONS ── */
+.filter-btn {
+  flex-shrink:0; padding:6px 14px; border:2px solid var(--bg3);
+  border-radius:20px; background:var(--white);
+  font-family:'Nunito',sans-serif; font-size:12px; font-weight:700;
+  color:var(--muted); cursor:pointer; transition:var(--trans); white-space:nowrap;
+}
+.filter-btn.active { background:var(--p); color:#fff; border-color:var(--p); }
+
+/* ── DOCTOR CARD ── */
+.doc-card {
+  background:var(--white); border-radius:var(--r);
+  padding:14px 16px; margin-bottom:10px;
+  box-shadow:var(--shadow);
+  display:flex; gap:12px; align-items:center;
+}
+.doc-ava {
+  width:50px; height:50px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,var(--p),var(--pm));
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; color:#fff; font-weight:800;
+}
+.doc-info { flex:1; }
+.doc-name { font-weight:800; font-size:15px; margin-bottom:3px; }
+.doc-spec { font-size:12px; color:var(--muted); }
 </style>
 </head>
 <body>
@@ -401,20 +464,37 @@ select { background-image:none; }
     <div class="page active" id="page-home">
       <div class="hero">
         <div class="hero-badge"><span>🟢</span> Уфа · Работаем сегодня</div>
-        <h2>Здоровье вашего питомца — наша забота</h2>
+        <h2 id="heroTitle">Здоровье вашего питомца — наша забота</h2>
         <p id="clinicSchedule">пн–сб 9:00–20:00 · вс 10:00–17:00</p>
       </div>
-      <div class="quick">
+
+      <!-- Быстрые действия — разные по ролям -->
+      <div class="quick" id="quickClient">
         <button class="qa" onclick="goPage('book',document.querySelectorAll('.nav-btn')[1])"><span class="ico">📅</span><span class="lbl">Записаться на приём</span></button>
         <button class="qa" onclick="goPage('pets',document.querySelectorAll('.nav-btn')[2])"><span class="ico">🐾</span><span class="lbl">Мои питомцы</span></button>
         <button class="qa" onclick="openModal('modalCall')"><span class="ico">📞</span><span class="lbl">Позвонить</span></button>
         <button class="qa" onclick="openModal('modalAddr')"><span class="ico">📍</span><span class="lbl">Адрес клиники</span></button>
       </div>
+
+      <div class="quick" id="quickAdmin" style="display:none">
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('today',document.querySelectorAll('.rtab')[0])"><span class="ico">📋</span><span class="lbl">Все записи сегодня</span></button>
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('all',document.querySelectorAll('.rtab')[1])"><span class="ico">🗓️</span><span class="lbl">Записать клиента</span></button>
+        <button class="qa" onclick="goPage('pets',document.querySelectorAll('.nav-btn')[2])"><span class="ico">🐾</span><span class="lbl">Все питомцы</span></button>
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('stats',document.querySelectorAll('.rtab')[2])"><span class="ico">📊</span><span class="lbl">Статистика</span></button>
+      </div>
+
       <div class="sec-title">Ближайшие записи <span id="upcomingCount"></span></div>
-      <div class="card" id="upcomingList">
+      <div id="upcomingList">
         <div class="empty"><div class="ico">📅</div><p>Нет записей.<br>Запишитесь на приём!</p></div>
       </div>
-      <div class="sec-title">О клинике</div>
+
+      <!-- Врачи клиники (для клиента) -->
+      <div id="doctorsSection">
+        <div class="sec-title" style="margin-top:8px">Наши врачи</div>
+        <div id="doctorsPublicList"></div>
+      </div>
+
+      <div class="sec-title" style="margin-top:8px">О клинике</div>
       <div class="card" id="clinicInfo">
         <div class="ir"><span class="lbl">Адрес</span><span class="val" id="ci-addr">—</span></div>
         <div class="ir"><span class="lbl">Телефон</span><span class="val" id="ci-phone">—</span></div>
@@ -468,9 +548,13 @@ select { background-image:none; }
 
     <!-- PETS -->
     <div class="page" id="page-pets">
-      <div class="sec-title">Мои питомцы</div>
+      <div class="sec-title" id="petsTitle">Мои питомцы</div>
+      <!-- Поиск для админа -->
+      <div id="petsSearch" style="display:none;margin-bottom:12px">
+        <input class="fi" type="text" id="petsSearchInput" placeholder="🔍 Поиск по кличке или хозяину..." oninput="searchAllPets()">
+      </div>
       <div id="petsList"></div>
-      <button class="btn btn-y" onclick="openModal('modalAddPet')">+ Добавить питомца</button>
+      <button class="btn btn-y" id="addPetBtn" onclick="openModal('modalAddPet')">+ Добавить питомца</button>
     </div>
 
     <!-- STAFF PANEL -->
@@ -490,15 +574,24 @@ select { background-image:none; }
           <div class="stat"><div class="stat-n" id="st-pending">0</div><div class="stat-l">Ожидают</div></div>
           <div class="stat"><div class="stat-n" id="st-done">0</div><div class="stat-l">Готово</div></div>
         </div>
-        <div class="card" id="todayList"><div class="empty"><div class="ico">📅</div><p>Приёмов на сегодня нет</p></div></div>
+        <div id="todayList"><div class="empty"><div class="ico">📅</div><p>Приёмов на сегодня нет</p></div></div>
       </div>
 
       <!-- ALL -->
       <div id="staffTab-all" style="display:none">
-        <div class="fg" style="margin-bottom:12px">
-          <input class="fi" type="date" id="filterDate" onchange="loadAllAppointments()">
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+          <input class="fi" type="date" id="filterDate" onchange="loadAllAppointments()" style="flex:1">
+          <button class="btn btn-y" style="width:auto;padding:12px 14px;white-space:nowrap" onclick="loadAllAppointments()">🔄</button>
         </div>
-        <div class="card" style="overflow-x:auto" id="allList"><div class="empty"><div class="ico">📋</div><p>Нет записей</p></div></div>
+        <!-- Фильтр по статусу -->
+        <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
+          <button class="filter-btn active" onclick="setStatusFilter('',this)">Все</button>
+          <button class="filter-btn" onclick="setStatusFilter('pending',this)">Ожидают</button>
+          <button class="filter-btn" onclick="setStatusFilter('confirmed',this)">Подтверждены</button>
+          <button class="filter-btn" onclick="setStatusFilter('done',this)">Завершены</button>
+          <button class="filter-btn" onclick="setStatusFilter('cancelled',this)">Отменены</button>
+        </div>
+        <div id="allList"><div class="empty"><div class="ico">📋</div><p>Нет записей</p></div></div>
       </div>
 
       <!-- STATS -->
@@ -698,7 +791,7 @@ function applyClinicData() {
 
 async function loadDoctors() {
   try {
-    const { data } = await sb.from('staff').select('id,name,specialty').eq('clinic_id', CLINIC_ID).eq('is_active', true);
+    const { data } = await sb.from('staff').select('id,name,specialty').eq('clinic_id', CLINIC_ID).eq('is_active', true).eq('role','doctor');
     doctors = data || [];
     const sel = document.getElementById('bkDoctor');
     sel.innerHTML = '<option value="">— Любой доступный —</option>';
@@ -711,6 +804,31 @@ async function loadDoctors() {
   } catch(e) {}
 }
 
+async function loadDoctorsPublic() {
+  if (currentUser?.role !== 'client') return;
+  try {
+    const { data } = await sb.from('staff')
+      .select('id,name,specialty')
+      .eq('clinic_id', CLINIC_ID)
+      .eq('is_active', true)
+      .eq('role','doctor');
+    const list = document.getElementById('doctorsPublicList');
+    if (!data?.length) { list.innerHTML = ''; return; }
+    list.innerHTML = data.map(d => {
+      const initials = d.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      return `
+        <div class="doc-card">
+          <div class="doc-ava">${initials}</div>
+          <div class="doc-info">
+            <div class="doc-name">${d.name}</div>
+            <div class="doc-spec">${d.specialty || 'Ветеринарный врач'}</div>
+          </div>
+          <button class="act-btn act-confirm" style="width:auto;padding:8px 12px" onclick="goPage('book',document.querySelectorAll('.nav-btn')[1])">Записаться</button>
+        </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
 // ══════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════
@@ -720,16 +838,40 @@ function showApp() {
   document.getElementById('app').classList.add('show');
   updateHeaderUser();
   applyRoleTheme();
+  applyRoleUI();
+
   if (currentUser.role !== 'client') {
     document.getElementById('navStaff').style.display = '';
     document.getElementById('tabDoctors').style.display = currentUser.role === 'admin' ? '' : 'none';
     document.getElementById('staffPanelTitle').textContent = currentUser.role === 'admin' ? 'Панель администратора' : 'Панель врача';
-    // Для персонала сразу открываем панель
-    pageHistory = ['staff'];
-    goPage('staff', document.getElementById('navStaff'));
+    pageHistory = ['home'];
+    goPage('home', document.querySelectorAll('.nav-btn')[0]);
   }
   loadUpcoming();
+  loadDoctorsPublic();
   if (currentUser.role !== 'client') loadTodayAppointments();
+}
+
+function applyRoleUI() {
+  const isClient = !currentUser || currentUser.role === 'client';
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Главная — быстрые кнопки
+  document.getElementById('quickClient').style.display = isClient ? 'grid' : 'none';
+  document.getElementById('quickAdmin').style.display = !isClient ? 'grid' : 'none';
+
+  // Врачи на главной — только клиенту
+  document.getElementById('doctorsSection').style.display = isClient ? 'block' : 'none';
+
+  // Питомцы
+  document.getElementById('petsTitle').textContent = isAdmin ? 'Все питомцы клиники' : isClient ? 'Мои питомцы' : 'Питомцы';
+  document.getElementById('petsSearch').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('addPetBtn').style.display = isClient ? 'block' : 'none';
+
+  // Заголовок hero
+  if (!isClient) {
+    document.getElementById('heroTitle').textContent = 'Добро пожаловать, ' + currentUser.name.split(' ')[0] + '!';
+  }
 }
 
 function applyRoleTheme() {
@@ -857,6 +999,7 @@ function applyUserSession() {
     document.getElementById('bkName').value = currentUser.name || '';
     document.getElementById('bkPhone').value = currentUser.phone || '';
     if (currentUser.role === 'client') loadBookingPets();
+    applyRoleUI();
   }
 }
 
@@ -1115,28 +1258,81 @@ async function loadUpcoming() {
 // PETS
 // ══════════════════════════════════════════
 async function loadPets() {
-  if (!currentUser || currentUser.role !== 'client') {
-    document.getElementById('petsList').innerHTML = '<div class="empty"><div class="ico">🔒</div><p>Войдите как клиент</p></div>';
+  const list = document.getElementById('petsList');
+  if (!currentUser) {
+    list.innerHTML = '<div class="empty"><div class="ico">🔒</div><p>Войдите в аккаунт</p></div>';
     return;
   }
+
+  // Администратор видит всех питомцев
+  if (currentUser.role === 'admin') {
+    await loadAllPets();
+    return;
+  }
+
+  if (currentUser.role !== 'client') {
+    list.innerHTML = '<div class="empty"><div class="ico">🔒</div><p>Раздел для клиентов</p></div>';
+    return;
+  }
+
   try {
     const { data } = await sb.from('pets').select('*').eq('client_id', currentUser.id);
-    const list = document.getElementById('petsList');
     if (!data?.length) {
       list.innerHTML = '<div class="empty"><div class="ico">🐾</div><p>Питомцев пока нет.<br>Добавьте первого!</p></div>';
       return;
     }
-    list.innerHTML = data.map(p => `
-      <div class="pet-card" onclick="openPetDetail('${p.id}')">
-        <div class="pet-ava">${p.type || '🐾'}</div>
-        <div>
-          <div class="pet-name">${p.name}</div>
-          <div class="pet-breed">${p.breed || 'Порода не указана'} · ${p.birth_year ? (new Date().getFullYear() - p.birth_year) + ' лет' : '—'}</div>
-          <span class="badge b-green">Активен</span>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = data.map(p => renderPetCard(p)).join('');
   } catch(e) {}
+}
+
+function renderPetCard(p, clientName) {
+  const age = p.birth_year ? (new Date().getFullYear() - p.birth_year) + ' лет' : '—';
+  return `
+    <div class="pet-card" onclick="openPetDetail('${p.id}')">
+      <div class="pet-ava">${p.type || '🐾'}</div>
+      <div style="flex:1">
+        <div class="pet-name">${p.name}</div>
+        <div class="pet-breed">${p.breed || 'Порода не указана'} · ${age}</div>
+        ${clientName ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">👤 ${clientName}</div>` : ''}
+        <span class="badge b-green" style="margin-top:4px;display:inline-block">Активен</span>
+      </div>
+    </div>`;
+}
+
+let allPetsData = [];
+
+async function loadAllPets() {
+  const list = document.getElementById('petsList');
+  try {
+    const { data } = await sb.from('pets')
+      .select('*, clients(name,phone)')
+      .eq('clinic_id', CLINIC_ID)
+      .order('name');
+    allPetsData = data || [];
+    renderPetsList(allPetsData);
+  } catch(e) {
+    list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки</p></div>';
+  }
+}
+
+function renderPetsList(pets) {
+  const list = document.getElementById('petsList');
+  if (!pets?.length) {
+    list.innerHTML = '<div class="empty"><div class="ico">🐾</div><p>Питомцев пока нет</p></div>';
+    return;
+  }
+  list.innerHTML = pets.map(p => renderPetCard(p, p.clients?.name)).join('');
+}
+
+function searchAllPets() {
+  const q = document.getElementById('petsSearchInput').value.toLowerCase();
+  if (!q) { renderPetsList(allPetsData); return; }
+  const filtered = allPetsData.filter(p =>
+    p.name?.toLowerCase().includes(q) ||
+    p.clients?.name?.toLowerCase().includes(q) ||
+    p.breed?.toLowerCase().includes(q)
+  );
+  renderPetsList(filtered);
 }
 
 async function addPet() {
@@ -1222,21 +1418,72 @@ async function loadTodayAppointments() {
     document.getElementById('st-done').textContent = done;
 
     if (!total) { list.innerHTML = '<div class="empty"><div class="ico">📅</div><p>Приёмов на сегодня нет</p></div>'; return; }
-
-    list.innerHTML = data.map(a => `
-      <div class="appt" onclick="openApptDetail('${a.id}')">
-        <div class="appt-ava">${a.pets?.type || '🐾'}</div>
-        <div class="appt-info">
-          <div class="appt-name">${a.pets?.name || '—'} · ${a.clients?.name || '—'}</div>
-          <div class="appt-sub">${a.complaint || 'Без жалоб'} · ${a.clients?.phone || ''}</div>
-        </div>
-        <div class="appt-meta">
-          <div class="appt-time">${a.time?.slice(0,5)}</div>
-          <div style="margin-top:4px">${statusBadge(a.status)}</div>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = data.map(a => renderApptCard(a)).join('');
   } catch(e) {}
+}
+
+// Рендер карточки записи с кнопками действий
+function renderApptCard(a) {
+  const phone = a.clients?.phone || '';
+  const actions = buildActionBtns(a);
+  return `
+    <div class="appt-card status-${a.status}">
+      <div class="appt-card-top">
+        <div class="appt-card-ava">${a.pets?.type || '🐾'}</div>
+        <div class="appt-card-info">
+          <div class="appt-card-name">${a.pets?.name || '—'}</div>
+          <div class="appt-card-sub">${a.clients?.name || '—'} · ${phone}</div>
+        </div>
+        <div class="appt-card-time">${(a.time||'').slice(0,5)}</div>
+      </div>
+      <div class="appt-card-meta">
+        <span style="font-size:12px;color:var(--muted)">${a.staff?.name || 'Любой врач'}</span>
+        ${statusBadge(a.status)}
+      </div>
+      ${a.complaint ? `<div class="appt-card-complaint">💬 ${a.complaint}</div>` : ''}
+      <div class="appt-card-actions">
+        ${phone ? `<button class="act-btn act-call" onclick="window.location.href='tel:${phone}'">📞 Позвонить</button>` : ''}
+        ${actions}
+      </div>
+    </div>`;
+}
+
+function buildActionBtns(a) {
+  const id = a.id;
+  let btns = '';
+  if (a.status === 'pending') {
+    btns += `<button class="act-btn act-confirm" onclick="quickStatus('${id}','confirmed',event)">✓ Подтвердить</button>`;
+    btns += `<button class="act-btn act-cancel" onclick="quickStatus('${id}','cancelled',event)">✗ Отменить</button>`;
+  } else if (a.status === 'confirmed') {
+    btns += `<button class="act-btn act-done" onclick="quickStatus('${id}','done',event)">✓ Завершить</button>`;
+    btns += `<button class="act-btn act-cancel" onclick="quickStatus('${id}','cancelled',event)">✗ Отменить</button>`;
+  } else if (a.status === 'done') {
+    btns += `<span style="font-size:12px;color:#166534;font-weight:700">✓ Приём завершён</span>`;
+  } else if (a.status === 'cancelled') {
+    btns += `<button class="act-btn act-restore" onclick="quickStatus('${id}','pending',event)">↩ Восстановить</button>`;
+  }
+  return btns;
+}
+
+// Быстрая смена статуса прямо из карточки (без открытия модалки)
+async function quickStatus(id, status, e) {
+  if (e) e.stopPropagation();
+  try {
+    await sb.from('appointments').update({ status }).eq('id', id);
+    toast('✅ ' + { confirmed:'Подтверждено', done:'Завершено', cancelled:'Отменено', pending:'Восстановлено' }[status]);
+    loadTodayAppointments();
+    loadAllAppointments();
+    loadUpcoming();
+  } catch(err) { toast('❌ ' + err.message); }
+}
+
+let currentStatusFilter = '';
+
+function setStatusFilter(status, btn) {
+  currentStatusFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAllAppointments();
 }
 
 async function loadAllAppointments() {
@@ -1250,22 +1497,12 @@ async function loadAllAppointments() {
     `).eq('clinic_id', CLINIC_ID).eq('date', dateVal).order('time');
 
     if (currentUser?.role === 'doctor') q = q.eq('staff_id', currentUser.staffId);
+    if (currentStatusFilter) q = q.eq('status', currentStatusFilter);
 
     const { data } = await q;
     const list = document.getElementById('allList');
     if (!data?.length) { list.innerHTML = '<div class="empty"><div class="ico">📋</div><p>Нет записей</p></div>'; return; }
-
-    list.innerHTML = `<table class="admin-table">
-      <thead><tr><th>Время</th><th>Питомец</th><th>Клиент</th><th>Врач</th><th>Статус</th></tr></thead>
-      <tbody>${data.map(a => `
-        <tr onclick="openApptDetail('${a.id}')" style="cursor:pointer">
-          <td><strong>${a.time?.slice(0,5)}</strong></td>
-          <td>${a.pets?.type || ''} ${a.pets?.name || '—'}</td>
-          <td>${a.clients?.name || '—'}<br><small style="color:var(--muted)">${a.clients?.phone || ''}</small></td>
-          <td>${a.staff?.name || 'Любой'}</td>
-          <td>${statusBadge(a.status)}</td>
-        </tr>`).join('')}
-      </tbody></table>`;
+    list.innerHTML = data.map(a => renderApptCard(a)).join('');
   } catch(e) {}
 }
 
