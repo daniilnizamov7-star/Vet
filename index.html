@@ -91,6 +91,29 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
   background:var(--p); padding:16px 18px 0;
   position:sticky; top:0; z-index:100;
   box-shadow:0 2px 16px rgba(124,58,237,.25);
+  transition:background .3s ease;
+}
+/* Шапка по ролям */
+.header.role-doctor {
+  background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);
+  box-shadow:0 2px 16px rgba(37,99,235,.3);
+}
+.header.role-admin {
+  background:linear-gradient(135deg,#111827 0%,#1f2937 100%);
+  box-shadow:0 2px 16px rgba(0,0,0,.4);
+}
+.header.role-doctor .live-dot { background:#60a5fa; }
+.header.role-admin .live-dot { background:#f59e0b; }
+.header.role-doctor .header-user { background:#60a5fa; color:#1e3a8a; }
+.header.role-admin .header-user { background:#f59e0b; color:#111827; }
+.header.role-doctor .nav-btn.active { color:#bfdbfe; border-bottom-color:#60a5fa; }
+.header.role-admin .nav-btn.active { color:#fcd34d; border-bottom-color:#f59e0b; }
+/* Роль-бейдж под логотипом */
+.role-badge {
+  display:none; font-size:10px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:2px 8px; border-radius:10px; margin-left:8px;
+  background:rgba(255,255,255,.15); color:rgba(255,255,255,.8);
 }
 .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
 .header-logo { font-family:'Russo One',sans-serif; color:#fff; font-size:20px; letter-spacing:1px; display:flex; align-items:center; gap:8px; }
@@ -358,7 +381,7 @@ select { background-image:none; }
 <div id="app">
   <div class="header">
     <div class="header-top">
-      <div class="header-logo"><div class="live-dot"></div> ЗАБОТА</div>
+      <div class="header-logo"><div class="live-dot"></div> ЗАБОТА<span class="role-badge" id="roleBadge"></span></div>
       <div class="header-user" onclick="showUserMenu()" id="headerUser">👤 Войти</div>
     </div>
     <div class="nav" id="mainNav">
@@ -693,13 +716,33 @@ function showApp() {
   document.getElementById('authScreen').classList.remove('show');
   document.getElementById('app').classList.add('show');
   updateHeaderUser();
+  applyRoleTheme();
   if (currentUser.role !== 'client') {
     document.getElementById('navStaff').style.display = '';
     document.getElementById('tabDoctors').style.display = currentUser.role === 'admin' ? '' : 'none';
     document.getElementById('staffPanelTitle').textContent = currentUser.role === 'admin' ? 'Панель администратора' : 'Панель врача';
+    // Для персонала сразу открываем панель
+    goPage('staff', document.getElementById('navStaff'));
   }
   loadUpcoming();
   if (currentUser.role !== 'client') loadTodayAppointments();
+}
+
+function applyRoleTheme() {
+  const header = document.querySelector('.header');
+  const badge = document.getElementById('roleBadge');
+  header.classList.remove('role-doctor','role-admin');
+  if (currentUser.role === 'doctor') {
+    header.classList.add('role-doctor');
+    badge.textContent = '👨‍⚕️ Врач';
+    badge.style.display = 'inline';
+  } else if (currentUser.role === 'admin') {
+    header.classList.add('role-admin');
+    badge.textContent = '🏥 Админ';
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 function switchAuthTab(tab, btn) {
@@ -1364,6 +1407,48 @@ function applyUpdate() {
     if (reg && reg.waiting) reg.waiting.postMessage('skipWaiting');
   });
 }
+
+// ══════════════════════════════════════════
+// КНОПКА НАЗАД ANDROID — не вылетаем из PWA
+// ══════════════════════════════════════════
+const pageOrder = ['home','book','pets','staff'];
+let pageHistory = ['home'];
+
+// Переопределяем goPage чтобы вести историю
+const _origGoPage = goPage;
+function goPage(name, btn) {
+  // Пушим в историю браузера
+  history.pushState({ page: name }, '', '#' + name);
+  pageHistory.push(name);
+  _origGoPage(name, btn);
+}
+
+// Перехватываем кнопку назад
+window.addEventListener('popstate', (e) => {
+  pageHistory.pop();
+  const prev = pageHistory[pageHistory.length - 1] || 'home';
+
+  // Если открыта модалка — закрываем её
+  const openModal = document.querySelector('.overlay.open');
+  if (openModal) {
+    openModal.classList.remove('open');
+    history.pushState({ page: prev }, '', '#' + prev);
+    return;
+  }
+
+  // Если на главной — не выходим, просто остаёмся
+  if (prev === 'home') {
+    history.pushState({ page: 'home' }, '', '#home');
+  }
+
+  // Переходим на предыдущую страницу
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const idx = pageOrder.indexOf(prev);
+  _origGoPage(prev, idx >= 0 ? navBtns[idx] : navBtns[0]);
+});
+
+// Начальное состояние в истории
+history.replaceState({ page: 'home' }, '', '#home');
 
 // START
 init();
