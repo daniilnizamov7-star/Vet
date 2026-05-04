@@ -1,4 +1,4 @@
-const CACHE = 'vetflow-v1';
+const CACHE = 'zabota-v1';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
