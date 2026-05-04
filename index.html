@@ -1389,8 +1389,13 @@ function switchStaffTab(tab, btn) {
     if (el) el.style.display = t === tab ? 'block' : 'none';
   });
   document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  if (tab === 'all') { loadAllAppointments(); }
+  if (btn) btn.classList.add('active');
+  if (tab === 'all') {
+    const fd = document.getElementById('filterDate');
+    if (!fd.value) fd.value = new Date().toISOString().split('T')[0];
+    loadAllAppointments();
+  }
+  if (tab === 'today') { loadTodayAppointments(); }
   if (tab === 'stats') { loadStats(); }
   if (tab === 'doctors') { loadDoctorsList(); }
 }
@@ -1487,7 +1492,10 @@ function setStatusFilter(status, btn) {
 }
 
 async function loadAllAppointments() {
-  const dateVal = document.getElementById('filterDate').value || new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  const fd = document.getElementById('filterDate');
+  if (!fd.value) fd.value = today;
+  const dateVal = fd.value;
   try {
     let q = sb.from('appointments').select(`
       id, date, time, status, complaint,
