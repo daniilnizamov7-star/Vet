@@ -2203,54 +2203,6 @@ function openDiagnosis(apptId, petId, e) {
 // ══════════════════════════════════════════
 let currentClientId = null;
 
-async function openClientProfile(clientId) {
-  currentClientId = clientId;
-  try {
-    const { data: c } = await sb.from('clients').select('*').eq('id', clientId).single();
-    document.getElementById('cpInfo').innerHTML = `
-      <div class="ir"><span class="lbl">Имя</span><span class="val">${c.name}</span></div>
-      <div class="ir"><span class="lbl">Телефон</span><span class="val"><a href="tel:${c.phone}" style="color:var(--p)">${c.phone}</a></span></div>
-      <div class="ir"><span class="lbl">Клиент с</span><span class="val">${formatDateRu(c.created_at?.split('T')[0])}</span></div>
-    `;
-
-    // Питомцы клиента
-    const { data: pets } = await sb.from('pets').select('*').eq('client_id', clientId);
-    document.getElementById('cpPetsCount').textContent = pets?.length || 0;
-    document.getElementById('cpPets').innerHTML = pets?.length
-      ? pets.map(p => `
-          <div class="pet-card" style="margin-bottom:8px" onclick="openPetDetail('${p.id}')">
-            <div class="pet-ava">${p.type || '🐾'}</div>
-            <div>
-              <div class="pet-name">${p.name}</div>
-              <div class="pet-breed">${p.breed || '—'} · ${p.birth_year ? new Date().getFullYear() - p.birth_year + ' лет' : '—'}</div>
-            </div>
-          </div>`).join('')
-      : '<div class="empty" style="padding:12px 0"><p>Питомцев нет</p></div>';
-
-    // История записей
-    const { data: appts } = await sb.from('appointments')
-      .select('*,pets(name,type),staff(name)')
-      .eq('client_id', clientId)
-      .order('date', {ascending: false}).limit(10);
-
-    document.getElementById('cpHistory').innerHTML = appts?.length
-      ? appts.map(a => `
-          <div class="appt" style="cursor:pointer" onclick="openApptDetail('${a.id}')">
-            <div class="appt-ava">${a.pets?.type || '🐾'}</div>
-            <div class="appt-info">
-              <div class="appt-name">${a.pets?.name || '—'}</div>
-              <div class="appt-sub">${a.complaint || 'Без жалоб'} · ${a.staff?.name || '—'}</div>
-            </div>
-            <div class="appt-meta">
-              <div class="appt-time">${formatDateShort(a.date)}</div>
-              <div>${statusBadge(a.status)}</div>
-            </div>
-          </div>`).join('')
-      : '<div class="empty" style="padding:12px 0"><p>Записей нет</p></div>';
-
-    openModal('modalClientProfile');
-  } catch(e) { toast('❌ ' + e.message); }
-}
 
 function openAdminBooking() {
   // Заполняем врачей
@@ -2276,7 +2228,6 @@ function openAdminBooking() {
 // ══════════════════════════════════════════
 // СПИСОК КЛИЕНТОВ
 // ══════════════════════════════════════════
-let allClientsData = [];
 
 
 function renderClients(clients) {
@@ -2297,14 +2248,6 @@ function renderClients(clients) {
   `).join('');
 }
 
-function searchClients() {
-  const q = document.getElementById('clientSearchInput').value.toLowerCase();
-  if (!q) { renderClients(allClientsData); return; }
-  const filtered = allClientsData.filter(c =>
-    c.name?.toLowerCase().includes(q) || c.phone?.includes(q)
-  );
-  renderClients(filtered);
-}
 
 // Открытие профиля клиента из карточки записи
 async function openClientFromAppt(clientId, e) {
