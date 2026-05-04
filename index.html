@@ -1095,7 +1095,7 @@ async function loginStaff() {
   const phone = document.getElementById('staffPhone').value.trim();
   const pass = document.getElementById('staffPass').value.trim();
   if (!phone || !pass) { toast('⚠️ Введите телефон и пароль'); return; }
-}
+
   try {
     const { data } = await sb.from('staff').select('*').eq('clinic_id', CLINIC_ID).eq('phone', phone).eq('password_hash', pass).eq('is_active', true).maybeSingle();
     if (!data) { toast('❌ Неверный телефон или пароль'); return; }
