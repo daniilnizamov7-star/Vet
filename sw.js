@@ -1,4 +1,4 @@
-const CACHE = 'zabota-v3';
+const CACHE = 'zabota-v4';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
