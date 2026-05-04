@@ -40,19 +40,24 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 #loading {
   position:fixed; inset:0; z-index:9999;
   background:var(--p);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px;
   transition:opacity .4s ease;
 }
 #loading.hide { opacity:0; pointer-events:none; }
+.load-logo-img {
+  width:220px; height:auto;
+  animation:logoIn .6s ease both;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.25));
+}
+@keyframes logoIn { from{opacity:0;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
 .load-ring {
-  width:90px; height:90px; border-radius:50%;
+  width:48px; height:48px; border-radius:50%;
   border:3px solid rgba(255,255,255,.2);
   border-top-color:var(--y);
   animation:spin 1s linear infinite;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
-.load-logo { font-family:'Russo One',sans-serif; color:#fff; font-size:28px; letter-spacing:2px; }
-.load-sub { color:rgba(255,255,255,.6); font-size:13px; letter-spacing:3px; text-transform:uppercase; }
+.load-sub { color:rgba(255,255,255,.5); font-size:11px; letter-spacing:3px; text-transform:uppercase; }
 
 /* ── AUTH SCREEN ── */
 #authScreen {
@@ -313,8 +318,9 @@ select { background-image:none; }
 
 <!-- LOADING -->
 <div id="loading">
+  <img class="load-logo-img" src="https://zabotaufa.com/wp-content/themes/zabota/images/logo_orig.jpg" onerror="this.style.display='none';document.getElementById('load-fallback').style.display='block'" alt="Забота">
+  <div id="load-fallback" style="display:none;font-family:'Russo One',sans-serif;color:#fff;font-size:32px;letter-spacing:2px">🐾 ЗАБОТА</div>
   <div class="load-ring"></div>
-  <div class="load-logo">ЗАБОТА</div>
   <div class="load-sub">Ветеринарная клиника · Уфа</div>
 </div>
 
@@ -580,6 +586,17 @@ const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
 const SUPABASE_ANON = 'YOUR_ANON_KEY';
 const CLINIC_ID = '00000000-0000-0000-0000-000000000001';
 
+// Fallback данные пока Supabase не подключён
+const CLINIC_FALLBACK = {
+  name: 'Забота',
+  city: 'Уфа',
+  address: 'ул. Первомайская, 83 / ул. Глинки, 4а',
+  phone: '+7 (347) 266-15-57',
+  whatsapp: '+7 (347) 266-15-57',
+  telegram: '@zabota_ufa',
+  schedule: 'Круглосуточно',
+};
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ══════════════════════════════════════════
@@ -596,11 +613,9 @@ async function init() {
   // Загружаем данные клиники
   try {
     const { data } = await sb.from('clinics').select('*').eq('id', CLINIC_ID).single();
-    if (data) {
-      clinic = data;
-      applyClinicData();
-    }
-  } catch(e) {}
+    if (data) { clinic = data; applyClinicData(); }
+    else { clinic = CLINIC_FALLBACK; applyClinicData(); }
+  } catch(e) { clinic = CLINIC_FALLBACK; applyClinicData(); }
 
   // Загружаем врачей для формы записи
   await loadDoctors();
@@ -612,7 +627,7 @@ async function init() {
     catch(e) { localStorage.removeItem('zabota_user'); }
   }
 
-  // Прячем loading, показываем нужный экран
+  // Прячем loading через 1.5 сек — независимо от Supabase
   setTimeout(() => {
     document.getElementById('loading').classList.add('hide');
     setTimeout(() => {
@@ -620,7 +635,7 @@ async function init() {
       if (currentUser) showApp();
       else showAuth();
     }, 400);
-  }, 1200);
+  }, 1500);
 
   buildDates();
   buildTimes([]);
