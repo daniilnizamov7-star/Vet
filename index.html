@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5b21b6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Ветклиника Забота — онлайн запись на приём в Уфе">
+<title>🐾 Забота</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Nunito:wght@400;500;600;700&display=swap');
+
+  :root {
+    --purple: #7c3aed;
+    --purple-mid: #8b5cf6;
+    --purple-light: #c4b5fd;
+    --yellow: #f59e0b;
+    --yellow-light: #fcd34d;
+    --yellow-pale: #fffbeb;
+    --yellow-border: #fde68a;
+    --bg: #faf7ff;
+    --bg2: #f5f0ff;
+    --text: #1a1028;
+    --muted: #6b7280;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(91,33,182,0.10);
+    --shadow-y: 0 4px 20px rgba(245,158,11,0.20);
+    --r: 18px; --rs: 12px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+  /* SPLASH */
+  #splash {
+    position:fixed; inset:0; z-index:9999;
+    background:linear-gradient(145deg,var(--purple) 0%,var(--purple-mid) 60%,#4c1d95 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    transition:opacity .5s ease,transform .5s ease;
+  }
+  #splash.hide { opacity:0; transform:scale(1.04); pointer-events:none; }
+  .splash-ring {
+    width:100px; height:100px; border-radius:50%;
+    background:rgba(245,158,11,.18);
+    display:flex; align-items:center; justify-content:center;
+    animation:pulse 1.4s ease infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(245,158,11,.3)} 50%{transform:scale(1.06);box-shadow:0 0 0 16px rgba(245,158,11,0)} }
+  .splash-paw { font-size:52px; }
+  .splash-title { font-family:'Russo One',sans-serif; color:#fff; font-size:32px; letter-spacing:2px; }
+  .splash-sub { color:var(--yellow-light); font-size:13px; letter-spacing:3px; text-transform:uppercase; }
+
+  /* APP */
+  #app { display:none; flex-direction:column; min-height:100vh; }
+  #app.visible { display:flex; }
+
+  /* HEADER */
+  .header {
+    background:var(--purple); padding:18px 18px 0;
+    position:sticky; top:0; z-index:100;
+    box-shadow:0 2px 16px rgba(91,33,182,.2);
+  }
+  .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .header-logo {
+    font-family:'Russo One',sans-serif; color:#fff; font-size:22px; letter-spacing:1px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--yellow); animation:blink 2s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .header-role {
+    background:var(--yellow); color:var(--purple);
+    font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; cursor:pointer;
+  }
+  .nav { display:flex; gap:2px; }
+  .nav-btn {
+    flex:1; background:transparent; border:none; color:rgba(255,255,255,.5);
+    padding:10px 4px 12px; font-family:'Nunito',sans-serif; font-size:10px; font-weight:700;
+    cursor:pointer; transition:all .2s;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    border-bottom:3px solid transparent; letter-spacing:.3px; text-transform:uppercase;
+  }
+  .nav-btn .ico { font-size:20px; }
+  .nav-btn.active { color:var(--yellow-light); border-bottom-color:var(--yellow); }
+
+  /* CONTENT */
+  .content { flex:1; padding:20px 16px; max-width:480px; margin:0 auto; width:100%; }
+  .page { display:none; animation:fadeUp .3s ease; }
+  .page.active { display:block; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  .section-title {
+    font-family:'Russo One',sans-serif; font-size:16px;
+    color:var(--purple); margin-bottom:14px; letter-spacing:.5px;
+  }
+  .card { background:var(--white); border-radius:var(--r); padding:16px; box-shadow:var(--shadow); margin-bottom:12px; }
+
+  /* HERO */
+  .hero-card {
+    background:linear-gradient(135deg,var(--purple) 0%,var(--purple-mid) 100%);
+    border-radius:var(--r); padding:22px 20px; margin-bottom:18px;
+    position:relative; overflow:hidden;
+  }
+  .hero-card::after { content:''; position:absolute; right:-20px; top:-20px; width:120px; height:120px; border-radius:50%; background:rgba(245,158,11,.15); }
+  .hero-card::before { content:'🐾'; position:absolute; right:16px; bottom:-4px; font-size:72px; opacity:.12; z-index:1; }
+  .hero-badge { display:inline-block; background:var(--yellow); color:var(--purple); font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:10px; position:relative; z-index:2; }
+  .hero-card h2 { font-family:'Russo One',sans-serif; color:#fff; font-size:18px; margin-bottom:6px; line-height:1.35; position:relative; z-index:2; }
+  .hero-card p { color:rgba(255,255,255,.75); font-size:13px; line-height:1.5; position:relative; z-index:2; }
+
+  /* QUICK */
+  .quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+  .action-btn {
+    background:var(--white); border:none; border-radius:var(--r); padding:16px 10px;
+    box-shadow:var(--shadow); cursor:pointer; transition:all .2s;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .action-btn:hover { transform:translateY(-2px); box-shadow:var(--shadow-y); }
+  .action-btn:active { transform:scale(.97); }
+  .action-btn .ico { font-size:28px; }
+  .action-btn .lbl { font-size:12px; font-weight:700; color:var(--text); line-height:1.3; text-align:center; }
+
+  /* FORM */
+  .form-group { margin-bottom:14px; }
+  .form-label { font-size:13px; font-weight:700; color:var(--purple); margin-bottom:6px; display:block; }
+  .form-input,.form-select,.form-textarea {
+    width:100%; background:var(--bg2); border:2px solid transparent;
+    border-radius:var(--rs); padding:12px 14px;
+    font-family:'Nunito',sans-serif; font-size:15px; color:var(--text);
+    transition:border-color .2s; outline:none;
+  }
+  .form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--purple-light); background:var(--white); }
+  .form-textarea { resize:none; height:80px; }
+
+  .btn {
+    width:100%; padding:14px; border:none; border-radius:var(--rs);
+    font-family:'Russo One',sans-serif; font-size:13px;
+    cursor:pointer; transition:all .2s; letter-spacing:.5px;
+  }
+  .btn-primary { background:var(--yellow); color:var(--purple); box-shadow:var(--shadow-y); }
+  .btn-primary:hover { background:var(--yellow-light); transform:translateY(-1px); }
+  .btn-secondary { background:var(--bg2); color:var(--purple); margin-top:8px; }
+  .btn-purple { background:var(--purple); color:#fff; }
+
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+  .badge-green { background:#dcfce7; color:#166534; }
+  .badge-yellow { background:#fef3c7; color:#92400e; }
+  .badge-purple { background:#ede9fe; color:#5b21b6; }
+  .badge-blue { background:#dbeafe; color:#1d4ed8; }
+
+  /* APPT */
+  .appt-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--bg2); }
+  .appt-item:last-child { border-bottom:none; }
+  .appt-avatar {
+    width:44px; height:44px; border-radius:12px;
+    background:var(--yellow-pale); border:2px solid var(--yellow-border);
+    display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+  }
+  .appt-info { flex:1; min-width:0; }
+  .appt-name { font-weight:700; font-size:14px; margin-bottom:2px; }
+  .appt-sub { font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .appt-time { font-size:12px; font-weight:700; color:var(--purple); flex-shrink:0; text-align:right; }
+
+  /* PET */
+  .pet-card {
+    background:var(--white); border-radius:var(--r); padding:16px; box-shadow:var(--shadow);
+    margin-bottom:12px; display:flex; gap:14px; align-items:flex-start;
+    cursor:pointer; transition:all .2s; border-left:4px solid var(--yellow);
+  }
+  .pet-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-y); }
+  .pet-avatar {
+    width:54px; height:54px; border-radius:14px;
+    background:var(--yellow-pale); border:2px solid var(--yellow-border);
+    display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;
+  }
+  .pet-name { font-family:'Russo One',sans-serif; font-size:15px; margin-bottom:4px; color:var(--purple); }
+  .pet-breed { font-size:12px; color:var(--muted); margin-bottom:8px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:200;
+    background:rgba(30,10,60,.55); backdrop-filter:blur(4px);
+    display:flex; align-items:flex-end;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--white); border-radius:24px 24px 0 0;
+    padding:20px 20px 32px; width:100%; max-width:480px; margin:0 auto;
+    transform:translateY(100%); transition:transform .3s ease; max-height:90vh; overflow-y:auto;
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal-handle { width:36px; height:4px; background:var(--bg2); border-radius:2px; margin:0 auto 18px; }
+  .modal-title { font-family:'Russo One',sans-serif; font-size:18px; margin-bottom:18px; color:var(--purple); }
+
+  .date-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; }
+  .date-row::-webkit-scrollbar { display:none; }
+  .date-chip {
+    flex-shrink:0; background:var(--bg2); border:2px solid transparent;
+    border-radius:var(--rs); padding:8px 12px; text-align:center; cursor:pointer; transition:all .15s;
+  }
+  .date-chip .dn { font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .date-chip .dd { font-size:20px; font-weight:700; color:var(--purple); }
+  .date-chip.selected { background:var(--yellow); border-color:var(--yellow); }
+  .date-chip.selected .dn,.date-chip.selected .dd { color:var(--purple); }
+
+  .schedule-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+  .time-slot {
+    background:var(--bg2); border:2px solid transparent; border-radius:var(--rs);
+    padding:10px 4px; text-align:center; font-size:13px; font-weight:700;
+    cursor:pointer; transition:all .15s;
+  }
+  .time-slot:hover { border-color:var(--purple-light); }
+  .time-slot.selected { background:var(--purple); color:#fff; border-color:var(--purple); }
+  .time-slot.busy { opacity:.3; pointer-events:none; text-decoration:line-through; }
+
+  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+  .stat-card { background:var(--white); border-radius:var(--rs); padding:14px 8px; text-align:center; box-shadow:var(--shadow); border-top:3px solid var(--yellow); }
+  .stat-num { font-family:'Russo One',sans-serif; font-size:24px; color:var(--purple); }
+  .stat-lbl { font-size:10px; color:var(--muted); margin-top:2px; font-weight:700; text-transform:uppercase; }
+
+  .role-switcher { display:flex; gap:4px; background:var(--bg2); border-radius:var(--rs); padding:4px; margin-bottom:16px; }
+  .role-btn { flex:1; padding:10px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--muted); transition:all .2s; }
+  .role-btn.active { background:var(--purple); color:#fff; }
+
+  .info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--bg2); font-size:14px; }
+  .info-row:last-child { border-bottom:none; }
+  .info-row .lbl { color:var(--muted); font-weight:500; }
+  .info-row .val { font-weight:700; color:var(--purple); }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:var(--purple); color:#fff;
+    padding:12px 22px; border-radius:14px;
+    font-size:14px; font-weight:700;
+    box-shadow:0 8px 32px rgba(91,33,182,.3);
+    z-index:9000; transition:transform .3s ease; white-space:nowrap;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  a { text-decoration:none; }
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-ring"><div class="splash-paw">🐾</div></div>
+  <div class="splash-title">ЗАБОТА</div>
+  <div class="splash-sub">Ветеринарная клиника · Уфа</div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-logo"><div class="dot"></div> ЗАБОТА</div>
+      <div class="header-role" onclick="openModal('roleModal')">👤 <span id="roleLabel">Клиент</span></div>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" onclick="showPage('home',this)"><span class="ico">🏠</span>Главная</button>
+      <button class="nav-btn" onclick="showPage('record',this)"><span class="ico">📅</span>Запись</button>
+      <button class="nav-btn" onclick="showPage('pets',this)"><span class="ico">🐾</span>Питомцы</button>
+      <button class="nav-btn" onclick="showPage('doctor',this)"><span class="ico">👨‍⚕️</span>Врач</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page active" id="page-home">
+      <div class="hero-card">
+        <div class="hero-badge">🐾 Уфа · Работаем сегодня</div>
+        <h2>Здоровье вашего питомца — наша забота</h2>
+        <p>пн–сб 9:00–20:00 &nbsp;·&nbsp; вс 10:00–17:00</p>
+      </div>
+      <div class="quick-actions">
+        <button class="action-btn" onclick="showPage('record',document.querySelectorAll('.nav-btn')[1])"><span class="ico">📅</span><span class="lbl">Записаться на приём</span></button>
+        <button class="action-btn" onclick="showPage('pets',document.querySelectorAll('.nav-btn')[2])"><span class="ico">🐾</span><span class="lbl">Мои питомцы</span></button>
+        <button class="action-btn" onclick="openModal('callModal')"><span class="ico">📞</span><span class="lbl">Позвонить</span></button>
+        <button class="action-btn" onclick="openModal('addressModal')"><span class="ico">📍</span><span class="lbl">Адрес</span></button>
+      </div>
+      <div class="section-title">Ближайшие записи</div>
+      <div class="card">
+        <div class="appt-item">
+          <div class="appt-avatar">🐱</div>
+          <div class="appt-info"><div class="appt-name">Мурзик</div><div class="appt-sub">Плановый осмотр · Иванова А.А.</div></div>
+          <div class="appt-time">Пт<br>14:30<br><span class="badge badge-yellow">Ожидает</span></div>
+        </div>
+        <div class="appt-item">
+          <div class="appt-avatar">🐶</div>
+          <div class="appt-info"><div class="appt-name">Рекс</div><div class="appt-sub">Вакцинация · Петров В.С.</div></div>
+          <div class="appt-time">Сб<br>10:00<br><span class="badge badge-green">✓ Подтвержд.</span></div>
+        </div>
+      </div>
+      <div class="section-title">Контакты</div>
+      <div class="card">
+        <div class="info-row"><span class="lbl">Адрес</span><span class="val">г. Уфа, ул. Примерная, 1</span></div>
+        <div class="info-row"><span class="lbl">Телефон</span><span class="val">+7 (347) 000-00-00</span></div>
+        <div class="info-row"><span class="lbl">Режим</span><span class="val">пн–сб 9:00–20:00</span></div>
+        <div class="info-row"><span class="lbl">Врачей</span><span class="val">5 специалистов</span></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-record">
+      <div class="section-title">Запись на приём</div>
+      <div class="card">
+        <div class="form-group"><label class="form-label">Ваше имя</label><input class="form-input" type="text" placeholder="Иванова Анна Александровна" id="ownerName"></div>
+        <div class="form-group"><label class="form-label">Телефон</label><input class="form-input" type="tel" placeholder="+7 (000) 000-00-00" id="ownerPhone"></div>
+        <div class="form-group">
+          <label class="form-label">Вид питомца</label>
+          <select class="form-select" id="petSelect">
+            <option value="">— Выберите —</option>
+            <option value="cat">🐱 Кошка / кот</option>
+            <option value="dog">🐶 Собака</option>
+            <option value="rabbit">🐰 Кролик</option>
+            <option value="bird">🦜 Птица</option>
+            <option value="other">🐾 Другое</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Кличка</label><input class="form-input" type="text" placeholder="Мурзик" id="petName"></div>
+        <div class="form-group">
+          <label class="form-label">Врач</label>
+          <select class="form-select" id="doctorSelect">
+            <option value="">— Любой доступный —</option>
+            <option>Смирнова Е.В. — терапевт</option>
+            <option>Козлов А.Р. — хирург</option>
+            <option>Фёдорова М.С. — дерматолог</option>
+            <option>Громов Н.П. — стоматолог</option>
+            <option>Белова Т.И. — терапевт</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Дата</label><div class="date-row" id="dateRow"></div></div>
+        <div class="form-group"><label class="form-label">Время</label><div class="schedule-grid" id="timeGrid"></div></div>
+        <div class="form-group"><label class="form-label">Жалобы / причина визита</label><textarea class="form-textarea" placeholder="Опишите кратко проблему..." id="complaint"></textarea></div>
+        <button class="btn btn-primary" onclick="submitRecord()">Записаться →</button>
+      </div>
+    </div>
+
+    <div class="page" id="page-pets">
+      <div class="section-title">Мои питомцы</div>
+      <div id="petsList">
+        <div class="pet-card" onclick="openPetDetail('Мурзик','Британская короткошёрстная','🐱','3 года','Кастрирован')">
+          <div class="pet-avatar">🐱</div>
+          <div><div class="pet-name">Мурзик</div><div class="pet-breed">Британская · 3 года</div><span class="badge badge-green">Здоров</span></div>
+        </div>
+        <div class="pet-card" onclick="openPetDetail('Рекс','Немецкая овчарка','🐶','5 лет','Кастрирован')">
+          <div class="pet-avatar">🐶</div>
+          <div><div class="pet-name">Рекс</div><div class="pet-breed">Немецкая овчарка · 5 лет</div><span class="badge badge-yellow">Вакцинация через 14 дней</span></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:4px" onclick="openModal('addPetModal')">+ Добавить питомца</button>
+    </div>
+
+    <div class="page" id="page-doctor">
+      <div class="section-title">Панель врача</div>
+      <div class="role-switcher">
+        <button class="role-btn active" onclick="switchTab('today',this)">Сегодня</button>
+        <button class="role-btn" onclick="switchTab('all',this)">Все записи</button>
+        <button class="role-btn" onclick="switchTab('stats',this)">Статистика</button>
+      </div>
+      <div id="doctorTab-today">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-num">8</div><div class="stat-lbl">Приёмов</div></div>
+          <div class="stat-card"><div class="stat-num">3</div><div class="stat-lbl">Ожидают</div></div>
+          <div class="stat-card"><div class="stat-num">5</div><div class="stat-lbl">Готово</div></div>
+        </div>
+        <div class="card">
+          <div class="appt-item">
+            <div class="appt-avatar">🐱</div>
+            <div class="appt-info"><div class="appt-name">Мурзик · Иванова А.А.</div><div class="appt-sub">Осмотр · +7 900 000-00-01</div></div>
+            <div class="appt-time">10:00<br><span class="badge badge-green">Готов</span></div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-avatar">🐶</div>
+            <div class="appt-info"><div class="appt-name">Рекс · Петров В.С.</div><div class="appt-sub">Вакцинация · +7 900 000-00-02</div></div>
+            <div class="appt-time">11:30<br><span class="badge badge-yellow">Ожидает</span></div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-avatar">🐰</div>
+            <div class="appt-info"><div class="appt-name">Пуговка · Сидорова Н.Р.</div><div class="appt-sub">Осмотр уха · +7 900 000-00-03</div></div>
+            <div class="appt-time">13:00<br><span class="badge badge-purple">Новая</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="doctorTab-all" style="display:none">
+        <div class="card">
+          <div class="appt-item"><div class="appt-avatar">🐱</div><div class="appt-info"><div class="appt-name">Мурзик</div><div class="appt-sub">Пн 10:00 · Осмотр</div></div><span class="badge badge-green">Готово</span></div>
+          <div class="appt-item"><div class="appt-avatar">🐶</div><div class="appt-info"><div class="appt-name">Рекс</div><div class="appt-sub">Пт 14:30 · Вакцинация</div></div><span class="badge badge-yellow">Ожидает</span></div>
+          <div class="appt-item"><div class="appt-avatar">🐰</div><div class="appt-info"><div class="appt-name">Пуговка</div><div class="appt-sub">Сб 13:00 · Осмотр уха</div></div><span class="badge badge-purple">Новая</span></div>
+        </div>
+      </div>
+      <div id="doctorTab-stats" style="display:none">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-num">42</div><div class="stat-lbl">Неделя</div></div>
+          <div class="stat-card"><div class="stat-num">187</div><div class="stat-lbl">Месяц</div></div>
+          <div class="stat-card"><div class="stat-num">4.9</div><div class="stat-lbl">Рейтинг</div></div>
+        </div>
+        <div class="card">
+          <div class="info-row"><span class="lbl">Осмотры</span><span class="val">48%</span></div>
+          <div class="info-row"><span class="lbl">Вакцинация</span><span class="val">22%</span></div>
+          <div class="info-row"><span class="lbl">Хирургия</span><span class="val">15%</span></div>
+          <div class="info-row"><span class="lbl">Прочее</span><span class="val">15%</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="callModal" onclick="closeModalOutside(event,'callModal')">
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">📞 Контакты</div>
+    <div class="card" style="box-shadow:none;background:var(--bg2)">
+      <div class="info-row"><span class="lbl">Телефон</span><span class="val">+7 (347) 000-00-00</span></div>
+      <div class="info-row"><span class="lbl">WhatsApp</span><span class="val">+7 (347) 000-00-00</span></div>
+      <div class="info-row"><span class="lbl">Telegram</span><span class="val">@zabota_ufa</span></div>
+    </div>
+    <a href="tel:+73470000000" class="btn btn-primary" style="display:block;text-align:center;margin-top:12px">Позвонить</a>
+    <button class="btn btn-secondary" onclick="closeModal('callModal')">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addressModal" onclick="closeModalOutside(event,'addressModal')">
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">📍 Адрес</div>
+    <div class="card" style="box-shadow:none;background:var(--bg2)">
+      <div class="info-row"><span class="lbl">Улица</span><span class="val">ул. Примерная, 1</span></div>
+      <div class="info-row"><span class="lbl">Город</span><span class="val">Уфа</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeModal('addressModal')">Понятно</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addPetModal" onclick="closeModalOutside(event,'addPetModal')">
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">🐾 Добавить питомца</div>
+    <div class="form-group"><label class="form-label">Кличка</label><input class="form-input" placeholder="Барсик" id="newPetName"></div>
+    <div class="form-group"><label class="form-label">Вид</label>
+      <select class="form-select" id="newPetType">
+        <option value="🐱">🐱 Кошка</option><option value="🐶">🐶 Собака</option>
+        <option value="🐰">🐰 Кролик</option><option value="🦜">🦜 Птица</option><option value="🐾">🐾 Другое</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Порода</label><input class="form-input" placeholder="Дворняжка" id="newPetBreed"></div>
+    <div class="form-group"><label class="form-label">Возраст</label><input class="form-input" placeholder="2 года" id="newPetAge"></div>
+    <button class="btn btn-primary" onclick="addPet()">Добавить</button>
+    <button class="btn btn-secondary" onclick="closeModal('addPetModal')">Отмена</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="petDetailModal" onclick="closeModalOutside(event,'petDetailModal')">
+  <div class="modal"><div class="modal-handle"></div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:52px" id="detailEmoji">🐱</div>
+      <div class="modal-title" style="text-align:center;margin-bottom:4px" id="detailName">Мурзик</div>
+      <div style="color:var(--muted);font-size:13px" id="detailBreed"></div>
+    </div>
+    <div class="card" style="box-shadow:none;background:var(--bg2)">
+      <div class="info-row"><span class="lbl">Возраст</span><span class="val" id="detailAge"></span></div>
+      <div class="info-row"><span class="lbl">Статус</span><span class="val" id="detailStatus"></span></div>
+      <div class="info-row"><span class="lbl">Последний визит</span><span class="val">14.04.2026</span></div>
+      <div class="info-row"><span class="lbl">Вакцинация</span><span class="val">14.07.2026</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeModal('petDetailModal');showPage('record',document.querySelectorAll('.nav-btn')[1])">📅 Записать на приём</button>
+    <button class="btn btn-secondary" onclick="closeModal('petDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="roleModal" onclick="closeModalOutside(event,'roleModal')">
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">Выберите роль</div>
+    <button class="btn btn-primary" style="margin-bottom:8px" onclick="setRole('client')">👤 Я — клиент</button>
+    <button class="btn btn-purple" onclick="setRole('doctor')">👨‍⚕️ Я — врач / персонал</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+setTimeout(() => {
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(() => { document.getElementById('splash').style.display='none'; document.getElementById('app').classList.add('visible'); }, 500);
+}, 1800);
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e, id) { if (e.target.id === id) closeModal(id); }
+function setRole(r) {
+  closeModal('roleModal');
+  document.getElementById('roleLabel').textContent = r === 'doctor' ? 'Врач' : 'Клиент';
+  showToast(r === 'doctor' ? '👨‍⚕️ Режим врача' : '👤 Режим клиента');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function buildDates() {
+  const row = document.getElementById('dateRow');
+  const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const now = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i);
+    const chip = document.createElement('div'); chip.className = 'date-chip' + (i === 0 ? ' selected' : '');
+    chip.innerHTML = `<div class="dn">${days[d.getDay()]}</div><div class="dd">${d.getDate()}</div>`;
+    chip.onclick = () => { document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected')); chip.classList.add('selected'); buildTimes(); };
+    row.appendChild(chip);
+  }
+}
+function buildTimes() {
+  const grid = document.getElementById('timeGrid'); grid.innerHTML = '';
+  const slots = ['9:00','9:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','16:00'];
+  const busy = [1,4,7];
+  slots.forEach((t, i) => {
+    const el = document.createElement('div'); el.className = 'time-slot' + (busy.includes(i) ? ' busy' : '');
+    el.textContent = t;
+    el.onclick = () => { document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected')); el.classList.add('selected'); };
+    grid.appendChild(el);
+  });
+}
+buildDates(); buildTimes();
+function submitRecord() {
+  const name = document.getElementById('ownerName').value.trim();
+  const phone = document.getElementById('ownerPhone').value.trim();
+  const pet = document.getElementById('petName').value.trim();
+  const sel = document.querySelector('.time-slot.selected');
+  const date = document.querySelector('.date-chip.selected');
+  if (!name || !phone || !pet) { showToast('⚠️ Заполните имя, телефон и кличку'); return; }
+  if (!sel) { showToast('⚠️ Выберите время'); return; }
+  showToast(`✅ Запись оформлена на ${date?.querySelector('.dd').textContent} в ${sel.textContent}`);
+  ['ownerName','ownerPhone','petName','complaint'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  setTimeout(() => showPage('home', document.querySelectorAll('.nav-btn')[0]), 1200);
+}
+function openPetDetail(name, breed, emoji, age, status) {
+  document.getElementById('detailName').textContent = name;
+  document.getElementById('detailBreed').textContent = breed;
+  document.getElementById('detailEmoji').textContent = emoji;
+  document.getElementById('detailAge').textContent = age;
+  document.getElementById('detailStatus').textContent = status;
+  openModal('petDetailModal');
+}
+function addPet() {
+  const name = document.getElementById('newPetName').value.trim();
+  const type = document.getElementById('newPetType').value;
+  const breed = document.getElementById('newPetBreed').value.trim() || 'Порода не указана';
+  const age = document.getElementById('newPetAge').value.trim() || '—';
+  if (!name) { showToast('⚠️ Введите кличку'); return; }
+  const list = document.getElementById('petsList');
+  const card = document.createElement('div'); card.className = 'pet-card';
+  card.innerHTML = `<div class="pet-avatar">${type}</div><div><div class="pet-name">${name}</div><div class="pet-breed">${breed} · ${age}</div><span class="badge badge-purple">Новый</span></div>`;
+  card.onclick = () => openPetDetail(name, breed, type, age, '—');
+  list.appendChild(card);
+  ['newPetName','newPetBreed','newPetAge'].forEach(id => document.getElementById(id).value = '');
+  closeModal('addPetModal'); showToast(`🐾 ${name} добавлен!`);
+}
+function switchTab(tab, btn) {
+  ['today','all','stats'].forEach(t => document.getElementById('doctorTab-' + t).style.display = t === tab ? 'block' : 'none');
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
