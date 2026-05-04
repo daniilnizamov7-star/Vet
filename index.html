@@ -2203,7 +2203,7 @@ function openDiagnosis(apptId, petId, e) {
 // ══════════════════════════════════════════
 let currentClientId = null;
 
-async async function openClientProfile(clientId) {
+async function openClientProfile(clientId) {
   currentClientId = clientId;
   try {
     const { data: c } = await sb.from('clients').select('*').eq('id', clientId).single();
