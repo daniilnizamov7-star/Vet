@@ -876,25 +876,29 @@ let doctors = [];
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
+// Утилита: Promise с таймаутом
+function withTimeout(promise, ms = 3000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+  ]);
+}
+
 async function init() {
-  // Загружаем данные клиники
-  try {
-    const { data } = await sb.from('clinics').select('*').eq('id', CLINIC_ID).single();
-    if (data) { clinic = data; applyClinicData(); }
-    else { clinic = CLINIC_FALLBACK; applyClinicData(); }
-  } catch(e) { clinic = CLINIC_FALLBACK; applyClinicData(); }
-
-  // Загружаем врачей для формы записи
-  await loadDoctors();
-
-  // Проверяем сохранённую сессию
+  // Сессия из localStorage — синхронно, сразу
   const saved = localStorage.getItem('zabota_user');
   if (saved) {
     try { currentUser = JSON.parse(saved); applyUserSession(); }
     catch(e) { localStorage.removeItem('zabota_user'); }
   }
 
-  // Прячем loading через 1.5 сек — независимо от Supabase
+  // Применяем fallback данные сразу — не ждём Supabase
+  clinic = CLINIC_FALLBACK;
+  applyClinicData();
+  buildDates();
+  buildTimes([]);
+
+  // ТАЙМЕР запускаем сразу — приложение откроется через 1.5 сек в любом случае
   setTimeout(() => {
     document.getElementById('loading').classList.add('hide');
     setTimeout(() => {
@@ -904,8 +908,13 @@ async function init() {
     }, 400);
   }, 1500);
 
-  buildDates();
-  buildTimes([]);
+  // Supabase грузим параллельно — не блокируем UI
+  Promise.allSettled([
+    withTimeout(sb.from('clinics').select('*').eq('id', CLINIC_ID).single(), 3000)
+      .then(({data}) => { if (data) { clinic = data; applyClinicData(); } })
+      .catch(() => {}),
+    withTimeout(loadDoctors(), 3000).catch(() => {})
+  ]);
 }
 
 function applyClinicData() {
