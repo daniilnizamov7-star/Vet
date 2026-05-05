@@ -372,8 +372,9 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 .modal-title { font-family:'Russo One',sans-serif; font-size:18px; margin-bottom:18px; color:var(--p); }
 
 /* ── ROLE TABS ── */
-.rtabs { display:flex; gap:4px; background:var(--bg2); border-radius:var(--rs); padding:4px; margin-bottom:16px; }
-.rtab { flex:1; padding:10px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--muted); transition:var(--trans); }
+.rtabs { display:flex; gap:3px; background:var(--bg2); border-radius:var(--rs); padding:4px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none; }
+.rtabs::-webkit-scrollbar { display:none; }
+.rtab { flex:1; min-width:0; padding:8px 4px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; cursor:pointer; background:transparent; color:var(--muted); transition:var(--trans); white-space:nowrap; }
 .rtab.active { background:var(--p); color:#fff; }
 
 /* ── TOAST ── */
@@ -694,10 +695,6 @@ select { background-image:none; }
 
       <!-- ALL -->
       <div id="staffTab-all" style="display:none">
-        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-          <input class="fi" type="date" id="filterDate" onchange="loadAllAppointments()" style="flex:1">
-          <button class="btn btn-y" style="width:auto;padding:12px 14px;white-space:nowrap" onclick="loadAllAppointments()">🔄</button>
-        </div>
         <!-- Фильтр по статусу -->
         <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
           <button class="filter-btn active" onclick="setStatusFilter('',this)">Все</button>
@@ -1645,11 +1642,7 @@ function switchStaffTab(tab, btn) {
   });
   document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  if (tab === 'all') {
-    const fd = document.getElementById('filterDate');
-    if (!fd.value) fd.value = new Date().toISOString().split('T')[0];
-    loadAllAppointments();
-  }
+  if (tab === 'all') { loadAllAppointments(); }
   if (tab === 'today') { loadTodayAppointments(); }
   if (tab === 'stats') { loadStats(); }
   if (tab === 'clients') { loadClients(); }
@@ -2031,26 +2024,23 @@ function setStatusFilter(status, btn) {
 }
 
 async function loadAllAppointments() {
-  const today = new Date().toISOString().split('T')[0];
-  const fd = document.getElementById('filterDate');
-  if (!fd.value) fd.value = today;
-  const dateVal = fd.value;
   try {
     let q = sb.from('appointments').select(`
       id, date, time, status, complaint, pet_id,
       clients(id, name, phone),
       pets(name, type),
       staff(name)
-    `).eq('clinic_id', CLINIC_ID).eq('date', dateVal).order('time');
+    `).eq('clinic_id', CLINIC_ID).order('date', {ascending:false}).order('time', {ascending:false});
 
     if (currentUser?.role === 'doctor') q = q.eq('staff_id', currentUser.staffId);
     if (currentStatusFilter) q = q.eq('status', currentStatusFilter);
 
-    const { data } = await q;
+    const { data, error } = await q;
     const list = document.getElementById('allList');
+    if (error) { console.error('loadAllAppointments:', error); list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки</p></div>'; return; }
     if (!data?.length) { list.innerHTML = '<div class="empty"><div class="ico">📋</div><p>Нет записей</p></div>'; return; }
     list.innerHTML = data.map(a => renderApptCard(a)).join('');
-  } catch(e) {}
+  } catch(e) { console.error('loadAllAppointments exception:', e); }
 }
 
 async function loadStats() {
