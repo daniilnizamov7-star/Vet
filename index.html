@@ -200,16 +200,17 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 .header-user { background:var(--y); color:var(--p); font-size:12px; font-weight:800; padding:5px 12px; border-radius:20px; cursor:pointer; transition:var(--trans); }
 .header-user:hover { background:var(--yl); }
 
-.nav { display:flex; }
+.nav { display:flex; width:100%; }
 .nav-btn {
-  flex:1; background:transparent; border:none; color:rgba(255,255,255,.45);
-  padding:10px 4px 12px;
-  font-family:'Nunito',sans-serif; font-size:10px; font-weight:800;
+  flex:1; min-width:0; background:transparent; border:none; color:rgba(255,255,255,.45);
+  padding:8px 2px 10px;
+  font-family:'Nunito',sans-serif; font-size:9px; font-weight:800;
   cursor:pointer; transition:var(--trans);
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  border-bottom:3px solid transparent; text-transform:uppercase; letter-spacing:.4px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  border-bottom:3px solid transparent; text-transform:uppercase; letter-spacing:.3px;
+  white-space:nowrap; overflow:hidden;
 }
-.nav-btn .ico { font-size:20px; }
+.nav-btn .ico { font-size:17px; }
 .nav-btn.active { color:var(--yl); border-bottom-color:var(--y); }
 
 /* ── CONTENT ── */
@@ -1825,18 +1826,20 @@ async function loadClientReminders() {
   if (!currentUser || currentUser.role !== 'client') return;
   try {
     // Берём все питомцы клиента
-    const { data: pets } = await sb.from('pets').select('id').eq('client_id', currentUser.id);
+    const { data: pets, error: petsErr } = await sb.from('pets').select('id').eq('client_id', currentUser.id);
+    if (petsErr) { console.error('reminders/pets error:', petsErr); return; }
     if (!pets?.length) return;
     const petIds = pets.map(p => p.id);
     if (!petIds.length) return;
 
-    const { data } = await sb.from('reminders')
+    const { data, error } = await sb.from('reminders')
       .select('*, pets(name,type)')
       .in('pet_id', petIds)
       .eq('is_done', false)
       .order('due_date')
       .limit(10);
 
+    if (error) { console.error('reminders error:', error); return; }
     if (!data?.length) return;
 
     // Считаем просроченные и скоро
@@ -1866,7 +1869,7 @@ async function loadClientReminders() {
           </div>
         </div>`;
     }).join('');
-  } catch(e) {}
+  } catch(e) { console.error('loadClientReminders exception:', e); }
 }
 
 function openAddReminder() {
@@ -2082,12 +2085,13 @@ async function loadClients() {
   const list = document.getElementById('clientsList');
   list.innerHTML = '<div class="empty"><div class="ico">⏳</div><p>Загружаем...</p></div>';
   try {
-    const [{ data: clients, count }, { data: pets }, { data: newClients }] = await Promise.all([
-      sb.from('clients').select('*', {count:'exact'}).eq('clinic_id', CLINIC_ID).order('created_at', {ascending:false}),
-      sb.from('pets').select('id', {count:'exact'}).eq('clinic_id', CLINIC_ID),
-      sb.from('clients').select('id', {count:'exact'}).eq('clinic_id', CLINIC_ID)
-        .gte('created_at', new Date(Date.now() - 30*86400000).toISOString()),
-    ]);
+    const { data: clients, count, error: e1 } = await sb.from('clients')
+      .select('*', {count:'exact'}).eq('clinic_id', CLINIC_ID).order('created_at', {ascending:false});
+    if (e1) throw e1;
+
+    const { data: pets } = await sb.from('pets').select('id').eq('clinic_id', CLINIC_ID);
+    const { data: newClients } = await sb.from('clients').select('id').eq('clinic_id', CLINIC_ID)
+      .gte('created_at', new Date(Date.now() - 30*86400000).toISOString());
 
     allClientsData = clients || [];
     document.getElementById('cs-total').textContent = count || 0;
@@ -2096,7 +2100,8 @@ async function loadClients() {
 
     renderClientsList(allClientsData);
   } catch(e) {
-    list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки</p></div>';
+    console.error('loadClients error:', e);
+    list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки. Попробуйте ещё раз.</p></div>';
   }
 }
 
