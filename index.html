@@ -2,20 +2,18 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#8B906A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="ВетСфера — ветеринарная клиника в Челябинске. Запись онлайн, напоминания, карта питомцев.">
 <title>🐾 ВетСфера</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Nunito:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* 🎨 ВетСфера — цвета из логотипа */
   --p: #7A8055;
   --pm: #8B906A;
   --pl: #A8B08A;
@@ -48,11 +46,22 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
   transition:opacity .4s ease;
 }
 #loading.hide { opacity:0; pointer-events:none; }
-.loading-logo-svg {
-  width:140px; height:140px;
+
+.loading-logo-img {  width:140px; height:140px;
+  object-fit:contain;
   animation: logoIn .6s cubic-bezier(.34,1.56,.64,1) both;
   filter: drop-shadow(0 8px 32px rgba(0,0,0,0.25));
+  border-radius:20px;
 }
+.loading-logo-img.error { display:none; }
+
+.loading-logo-fallback {
+  display:none;
+  width:140px; height:140px;
+  animation: logoIn .6s cubic-bezier(.34,1.56,.64,1) both;
+}
+.loading-logo-fallback.show { display:block; }
+
 @keyframes logoIn { from{opacity:0;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
 
 .load-ring {
@@ -65,7 +74,7 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 
 .loading-sub {
   font-family:'Russo One',sans-serif;
-  color:rgba(255,255,255,.8); font-size:22px; letter-spacing:4px;
+  color:rgba(255,255,255,.8); font-size:28px; letter-spacing:4px;
   animation: textSlide .5s cubic-bezier(.34,1.56,.64,1) .3s both;
 }
 .loading-city {
@@ -74,39 +83,29 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 }
 @keyframes textSlide { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-/* ── SVG LOGO ANIMATION ── */
-.logo-dog { animation: dogPop .5s cubic-bezier(.34,1.56,.64,1) .1s both; }
-.logo-cat { animation: catPop .4s cubic-bezier(.34,1.56,.64,1) .4s both; }
-.logo-ring { animation: ringPop .6s cubic-bezier(.34,1.56,.64,1) .2s both; }
-.logo-steth { animation: stethPop .5s cubic-bezier(.34,1.56,.64,1) .5s both; }
-@keyframes dogPop { from { opacity:0; transform: scale(.7) rotate(-10deg); } to { opacity:1; transform: scale(1) rotate(0deg); } }
-@keyframes catPop { from { opacity:0; transform: scale(0); } to { opacity:1; transform: scale(1); } }
-@keyframes ringPop { from { opacity:0; stroke-dashoffset: 300; } to { opacity:1; stroke-dashoffset: 0; } }
-@keyframes stethPop { from { opacity:0; transform: scale(0); } to { opacity:1; transform: scale(1); } }
-
-.logo-svg {
-  width:140px; height:140px;
-  filter: drop-shadow(0 8px 32px rgba(0,0,0,0.25));
-}
-/* пульсация после появления */
-.logo-svg { animation: logoFloat 3s ease-in-out 1.2s infinite; }
-@keyframes logoFloat {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-
 /* ── AUTH SCREEN ── */
-#authScreen {  display:none; position:fixed; inset:0; z-index:500;
+#authScreen {
+  display:none; position:fixed; inset:0; z-index:500;
   background: linear-gradient(145deg, var(--p) 0%, var(--p-dark) 100%);
   flex-direction:column; align-items:center; justify-content:center; padding:24px;
 }
 #authScreen.show { display:flex; }
 
-.auth-logo-svg {
+.auth-logo-img {
   width:90px; height:90px;
+  object-fit:contain;
   animation: logoIn .5s cubic-bezier(.34,1.56,.64,1) both;
   filter: drop-shadow(0 4px 16px rgba(0,0,0,0.2));
+  border-radius:16px;}
+.auth-logo-img.error { display:none; }
+
+.auth-logo-fallback {
+  display:none;
+  width:90px; height:90px;
+  animation: logoIn .5s cubic-bezier(.34,1.56,.64,1) both;
 }
+.auth-logo-fallback.show { display:block; }
+
 .auth-logo-text {
   font-family:'Russo One',sans-serif; color:#fff; font-size:28px; letter-spacing:3px; margin-top:8px;
   animation: textSlide .5s cubic-bezier(.34,1.56,.64,1) .2s both;
@@ -137,7 +136,7 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 #app { display:none; flex-direction:column; min-height:100vh; }
 #app.show { display:flex; }
 
-/* ── HEADER ── */
+/* ── HEADER ─ */
 .header {
   background: var(--p); padding:14px 18px 0;
   position:sticky; top:0; z-index:100;
@@ -145,8 +144,8 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 }
 .header.role-doctor {
   background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-  box-shadow: 0 2px 16px rgba(45,90,135,.3);}
-.header.role-admin {
+  box-shadow: 0 2px 16px rgba(45,90,135,.3);
+}.header.role-admin {
   background: linear-gradient(135deg, #4a5530 0%, #5E6340 100%);
   box-shadow: 0 2px 16px rgba(94,99,64,.35);
 }
@@ -169,7 +168,8 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
   font-family:'Russo One',sans-serif; color:#fff; font-size:17px; letter-spacing:1px;
   display:flex; align-items:center; gap:8px;
 }
-.header-logo-svg { width:32px; height:32px; }
+.header-logo-img { width:32px; height:32px; object-fit:contain; border-radius:6px; }
+.header-logo-img.error { display:none; }
 
 .live-dot { width:7px; height:7px; border-radius:50%; background:var(--yl); animation:blink 2s ease infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
@@ -194,7 +194,7 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 .nav-btn .ico { font-size:16px; }
 .nav-btn.active { color:var(--yl); border-bottom-color:var(--yl); }
 
-/* ── CONTENT ── */.content { flex:1; padding:18px 16px 32px; max-width:480px; margin:0 auto; width:100%; }
+/* ── CONTENT ─ */.content { flex:1; padding:18px 16px 32px; max-width:480px; margin:0 auto; width:100%; }
 .page { display:none; animation:fadeUp .3s ease; }
 .page.active { display:block; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
@@ -206,7 +206,7 @@ body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text);
 /* ── CARDS ── */
 .card { background:var(--white); border-radius:var(--r); padding:16px; box-shadow:var(--shadow); margin-bottom:12px; }
 
-/* ── HERO ── */
+/* ── HERO ─ */
 .hero {
   background: linear-gradient(135deg, var(--p) 0%, var(--pm) 100%);
   border-radius:var(--r); padding:22px 20px; margin-bottom:18px;
@@ -497,25 +497,21 @@ select { background-image:none; }
 <!-- LOADING SCREEN -->
 <!-- ═══════════════════════════════════════ -->
 <div id="loading">
-  <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-    <!-- Внешний круг -->
-    <circle class="logo-ring" cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="5"/>
-    <!-- Собака -->
-    <g class="logo-dog" fill="rgba(255,255,255,0.95)">
+  <img src="logo.png" alt="ВетСфера" class="loading-logo-img" id="loadingLogo" onerror="this.classList.add('error'); document.getElementById('loadingLogoFallback').classList.add('show');">
+  <svg class="loading-logo-fallback" id="loadingLogoFallback" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="5"/>
+    <g fill="rgba(255,255,255,0.95)">
       <path d="M75,65 C75,65 65,45 60,35 C55,25 55,20 65,22 C75,24 80,35 80,35 L85,30 C85,30 82,20 90,18 C98,16 105,25 105,25 L108,22 C108,22 115,20 120,28 C125,36 120,45 120,45 L130,50 C140,55 145,70 145,80 L145,110 C145,120 135,130 130,130 L130,140 C130,150 120,155 115,150 C110,145 110,135 110,130 L100,130 C95,130 90,140 85,145 C80,150 70,145 70,135 L70,125 C60,120 55,110 55,100 L55,80 C55,70 65,65 75,65 Z"/>
     </g>
-    <!-- Кошка -->
-    <g class="logo-cat" fill="rgba(255,255,255,0.5)">
+    <g fill="rgba(255,255,255,0.45)">
       <path d="M90,100 L90,90 L85,78 L80,75 L78,82 L75,78 L72,85 L75,90 L72,100 L72,110 C72,115 78,118 82,115 L85,112 L90,115 L95,112 L95,110 Z"/>
     </g>
-    <!-- Стетоскоп -->
-    <g class="logo-steth" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" stroke-linecap="round">
+    <g fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="5" stroke-linecap="round">
       <path d="M155,75 C165,75 170,85 170,100 C170,120 155,135 140,135"/>
-      <circle cx="140" cy="138" r="8" fill="rgba(255,255,255,0.7)" stroke="none"/>
-      <path d="M155,75 L165,60 C170,55 175,55 175,60 L175,65"/>
+      <circle cx="140" cy="138" r="8" fill="rgba(255,255,255,0.6)" stroke="none"/>
     </g>
   </svg>
-  <div class="loading-logo-text" style="font-family:'Russo One',sans-serif;color:#fff;font-size:28px;letter-spacing:4px;margin-bottom:4px;">ВетСфера</div>
+  <div class="loading-sub">ВетСфера</div>
   <div class="loading-city">Челябинск · Курчатовский район</div>
   <div class="load-ring"></div>
 </div>
@@ -524,7 +520,8 @@ select { background-image:none; }
 <!-- AUTH SCREEN -->
 <!-- ═══════════════════════════════════════ -->
 <div id="authScreen">
-  <svg class="auth-logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <img src="logo.png" alt="ВетСфера" class="auth-logo-img" id="authLogo" onerror="this.classList.add('error'); document.getElementById('authLogoFallback').classList.add('show');">
+  <svg class="auth-logo-fallback" id="authLogoFallback" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
     <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="5"/>
     <g fill="rgba(255,255,255,0.9)">
       <path d="M75,65 C75,65 65,45 60,35 C55,25 55,20 65,22 C75,24 80,35 80,35 L85,30 C85,30 82,20 90,18 C98,16 105,25 105,25 L108,22 C108,22 115,20 120,28 C125,36 120,45 120,45 L130,50 C140,55 145,70 145,80 L145,110 C145,120 135,130 130,130 L130,140 C130,150 120,155 115,150 C110,145 110,135 110,130 L100,130 C95,130 90,140 85,145 C80,150 70,145 70,135 L70,125 C60,120 55,110 55,100 L55,80 C55,70 65,65 75,65 Z"/>
@@ -537,9 +534,9 @@ select { background-image:none; }
       <circle cx="140" cy="138" r="8" fill="rgba(255,255,255,0.6)" stroke="none"/>
       <path d="M155,75 L165,60 C170,55 175,55 175,60 L175,65"/>
     </g>
-  </svg>  <div class="auth-logo-text">ВетСфера</div>
+  </svg>
+  <div class="auth-logo-text">ВетСфера</div>
   <div class="auth-sub">Ветеринарная клиника · Челябинск</div>
-
   <div class="auth-card">
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('client',this)">Я клиент</button>
@@ -571,22 +568,11 @@ select { background-image:none; }
   <div class="header">
     <div class="header-top">
       <div class="header-logo">
-        <svg class="header-logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="6"/>
-          <g fill="rgba(255,255,255,0.95)">
-            <path d="M75,65 C75,65 65,45 60,35 C55,25 55,20 65,22 C75,24 80,35 80,35 L85,30 C85,30 82,20 90,18 C98,16 105,25 105,25 L108,22 C108,22 115,20 120,28 C125,36 120,45 120,45 L130,50 C140,55 145,70 145,80 L145,110 C145,120 135,130 130,130 L130,140 C130,150 120,155 115,150 C110,145 110,135 110,130 L100,130 C95,130 90,140 85,145 C80,150 70,145 70,135 L70,125 C60,120 55,110 55,100 L55,80 C55,70 65,65 75,65 Z"/>
-          </g>
-          <g fill="rgba(255,255,255,0.45)">
-            <path d="M90,100 L90,90 L85,78 L80,75 L78,82 L75,78 L72,85 L75,90 L72,100 L72,110 C72,115 78,118 82,115 L85,112 L90,115 L95,112 L95,110 Z"/>
-          </g>
-          <g fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="5" stroke-linecap="round">
-            <path d="M155,75 C165,75 170,85 170,100 C170,120 155,135 140,135"/>
-            <circle cx="140" cy="138" r="8" fill="rgba(255,255,255,0.6)" stroke="none"/>
-          </g>
-        </svg>
+        <img src="logo.png" alt="ВетСфера" class="header-logo-img" id="headerLogo" onerror="this.classList.add('error')">
         ВетСфера <span class="role-badge" id="roleBadge"></span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">        <div class="header-user" onclick="showUserMenu()" id="headerUser">👤 Войти</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="header-user" onclick="showUserMenu()" id="headerUser">👤 Войти</div>
         <div id="logoutBtn" onclick="logout()" style="display:none;background:rgba(255,255,255,0.12);color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,0.25)">Выйти</div>
       </div>
     </div>
@@ -600,8 +586,7 @@ select { background-image:none; }
 
   <div class="content">
 
-    <!-- ═══ HOME ═══ -->
-    <div class="page active" id="page-home">
+    <!-- ═══ HOME ═══ -->    <div class="page active" id="page-home">
       <div class="hero">
         <div class="hero-badge"><span>🟢</span> Челябинск · Работаем сегодня</div>
         <h2 id="heroTitle">Здоровье вашего питомца — наша забота</h2>
@@ -610,8 +595,8 @@ select { background-image:none; }
 
       <!-- Быстрые действия — клиент -->
       <div class="quick" id="quickClient">
-        <button class="qa" onclick="goPage('book',document.querySelectorAll('.nav-btn')[1])"><span class="ico"></span><span class="lbl">Записаться на приём</span></button>
-        <button class="qa" onclick="goPage('pets',document.querySelectorAll('.nav-btn')[2])"><span class="ico"></span><span class="lbl">Мои питомцы</span></button>
+        <button class="qa" onclick="goPage('book',document.querySelectorAll('.nav-btn')[1])"><span class="ico">📅</span><span class="lbl">Записаться на приём</span></button>
+        <button class="qa" onclick="goPage('pets',document.querySelectorAll('.nav-btn')[2])"><span class="ico">🐾</span><span class="lbl">Мои питомцы</span></button>
         <button class="qa" onclick="openModal('modalCall')"><span class="ico">📞</span><span class="lbl">Позвонить</span></button>
         <button class="qa" onclick="openModal('modalAddr')"><span class="ico">📍</span><span class="lbl">Как нас найти</span></button>
       </div>
@@ -620,7 +605,7 @@ select { background-image:none; }
       <div class="quick" id="quickAdmin" style="display:none">
         <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));switchStaffTab('today',document.querySelectorAll('.rtab')[0])"><span class="ico">📋</span><span class="lbl">Записи сегодня</span></button>
         <button class="qa" onclick="openAdminBookModal()"><span class="ico">➕</span><span class="lbl">Записать клиента</span></button>
-        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));setTimeout(()=>switchStaffTab('clients',document.getElementById('tabClients')),100)"><span class="ico"></span><span class="lbl">Клиенты</span></button>
+        <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));setTimeout(()=>switchStaffTab('clients',document.getElementById('tabClients')),100)"><span class="ico">👥</span><span class="lbl">Клиенты</span></button>
         <button class="qa" onclick="goPage('staff',document.getElementById('navStaff'));setTimeout(()=>switchStaffTab('stats',document.querySelectorAll('.rtab')[3]),100)"><span class="ico">📊</span><span class="lbl">Статистика</span></button>
       </div>
 
@@ -636,6 +621,7 @@ select { background-image:none; }
       <div id="upcomingList">
         <div class="empty"><div class="ico">📅</div><p>Нет записей.<br>Запишитесь на приём!</p></div>
       </div>
+
       <!-- Врачи -->
       <div id="doctorsSection">
         <div class="sec-title" style="margin-top:8px">Наши врачи</div>
@@ -649,8 +635,7 @@ select { background-image:none; }
         <div class="ir"><span class="lbl">Режим</span><span class="val" id="ci-sched">пн–сб 9:00–21:00</span></div>
       </div>
 
-      <!-- QR-код для скачивания -->
-      <div class="qr-section" id="qrSection">
+      <!-- QR-код для скачивания -->      <div class="qr-section" id="qrSection">
         <h3>📱 Приложение ВетСфера</h3>
         <p>Отсканируйте QR-код, чтобы добавить приложение на телефон</p>
         <div id="qrCodeContainer">
@@ -660,7 +645,7 @@ select { background-image:none; }
       </div>
     </div>
 
-    <!-- ═══ BOOK ══ -->
+    <!-- ═══ BOOK ═══ -->
     <div class="page" id="page-book">
       <div class="sec-title">Запись на приём</div>
       <div class="card">
@@ -679,12 +664,13 @@ select { background-image:none; }
             <label class="fl">Вид питомца</label>
             <select class="fs" id="bkPetType">
               <option value="">— Выберите —</option>
-              <option value="">🐱 Кошка / кот</option>
-              <option value="🐶"> Собака</option>
-              <option value="🐰">🐰 Кролик</option>
+              <option value="🐱">🐱 Кошка / кот</option>
+              <option value="🐶">🐶 Собака</option>
+              <option value="🐰"> Кролик</option>
               <option value="🦜"> Птица</option>
-              <option value="🐾">🐾 Другое</option>
-            </select>          </div>
+              <option value="🐾"> Другое</option>
+            </select>
+          </div>
           <div class="fg"><label class="fl">Кличка питомца</label><input class="fi" type="text" id="bkPetName" placeholder="Мурзик"></div>
         </div>
 
@@ -698,10 +684,9 @@ select { background-image:none; }
         <div class="fg"><label class="fl">Время</label><div class="time-grid" id="bkTimes"></div></div>
         <div class="fg"><label class="fl">Жалобы / причина визита</label><textarea class="ft" id="bkComplaint" placeholder="Опишите кратко проблему..."></textarea></div>
         <button class="btn btn-y" id="bkSubmit" onclick="submitBooking()">Записаться →</button>
-      </div>
-    </div>
+      </div>    </div>
 
-    <!-- ═══ PETS ══ -->
+    <!-- ═══ PETS ═══ -->
     <div class="page" id="page-pets">
       <div class="sec-title" id="petsTitle">Мои питомцы</div>
       <div id="petsSearch" style="display:none;margin-bottom:12px">
@@ -733,12 +718,13 @@ select { background-image:none; }
 
       <div id="staffTab-all" style="display:none">
         <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
-          <button class="filter-btn active" onclick="setStatusFilter('',this)">Все</button>          <button class="filter-btn" onclick="setStatusFilter('pending',this)">Ожидают</button>
+          <button class="filter-btn active" onclick="setStatusFilter('',this)">Все</button>
+          <button class="filter-btn" onclick="setStatusFilter('pending',this)">Ожидают</button>
           <button class="filter-btn" onclick="setStatusFilter('confirmed',this)">Подтверждены</button>
           <button class="filter-btn" onclick="setStatusFilter('done',this)">Завершены</button>
           <button class="filter-btn" onclick="setStatusFilter('cancelled',this)">Отменены</button>
         </div>
-        <div id="allList"><div class="empty"><div class="ico"></div><p>Нет записей</p></div></div>
+        <div id="allList"><div class="empty"><div class="ico">📋</div><p>Нет записей</p></div></div>
       </div>
 
       <div id="staffTab-stats" style="display:none">
@@ -747,8 +733,7 @@ select { background-image:none; }
           <div class="stat"><div class="stat-n" id="ss-month">0</div><div class="stat-l">Месяц</div></div>
           <div class="stat"><div class="stat-n" id="ss-clients">0</div><div class="stat-l">Клиентов</div></div>
         </div>
-        <div class="card" id="statsDetail">
-          <div class="ir"><span class="lbl">Записей за неделю</span><span class="val" id="sd-week">0</span></div>
+        <div class="card" id="statsDetail">          <div class="ir"><span class="lbl">Записей за неделю</span><span class="val" id="sd-week">0</span></div>
           <div class="ir"><span class="lbl">Записей за месяц</span><span class="val" id="sd-month">0</span></div>
           <div class="ir"><span class="lbl">Всего клиентов</span><span class="val" id="sd-clients">0</span></div>
           <div class="ir"><span class="lbl">Всего питомцев</span><span class="val" id="sd-pets">0</span></div>
@@ -782,7 +767,8 @@ select { background-image:none; }
 
 <div class="overlay" id="modalCall" onclick="closeOuter(event,'modalCall')">
   <div class="modal"><div class="modal-handle"></div><div class="modal-title">📞 Контакты</div>
-    <div class="card" style="box-shadow:none;background:var(--bg2)">      <div class="ir"><span class="lbl">Телефон</span><span class="val" id="mc-phone">—</span></div>
+    <div class="card" style="box-shadow:none;background:var(--bg2)">
+      <div class="ir"><span class="lbl">Телефон</span><span class="val" id="mc-phone">—</span></div>
       <div class="ir"><span class="lbl">WhatsApp</span><span class="val" id="mc-wa">—</span></div>
       <div class="ir"><span class="lbl">Telegram</span><span class="val" id="mc-tg">—</span></div>
     </div>
@@ -796,8 +782,7 @@ select { background-image:none; }
     <div class="card" style="box-shadow:none;background:var(--bg2)">
       <div class="ir"><span class="lbl">Клиника</span><span class="val" id="ma-name">—</span></div>
       <div class="ir"><span class="lbl">Адрес</span><span class="val" id="ma-addr">—</span></div>
-      <div class="ir"><span class="lbl">Режим</span><span class="val" id="ma-sched">—</span></div>
-    </div>
+      <div class="ir"><span class="lbl">Режим</span><span class="val" id="ma-sched">—</span></div>    </div>
     <button class="btn btn-y" onclick="closeModal('modalAddr')">Понятно</button>
   </div>
 </div>
@@ -807,8 +792,8 @@ select { background-image:none; }
     <div class="fg"><label class="fl">Кличка</label><input class="fi" id="npName" placeholder="Барсик"></div>
     <div class="fg"><label class="fl">Вид</label>
       <select class="fs" id="npType">
-        <option value="🐱">🐱 Кошка</option><option value="🐶">🐶 Собака</option>
-        <option value="">🐰 Кролик</option><option value="🦜">🦜 Птица</option><option value="🐾">🐾 Другое</option>
+        <option value="🐱"> Кошка</option><option value="🐶"> Собака</option>
+        <option value="🐰">🐰 Кролик</option><option value="🦜">🦜 Птица</option><option value="🐾"> Другое</option>
       </select>
     </div>
     <div class="fg"><label class="fl">Порода</label><input class="fi" id="npBreed" placeholder="Дворняжка"></div>
@@ -831,7 +816,8 @@ select { background-image:none; }
     <div class="card" style="box-shadow:none;background:var(--bg2)">
       <div class="ir"><span class="lbl">Год рождения</span><span class="val" id="pd-year"></span></div>
       <div class="ir"><span class="lbl">Пол</span><span class="val" id="pd-gender"></span></div>
-      <div class="ir"><span class="lbl">Последний визит</span><span class="val" id="pd-last">—</span></div>    </div>
+      <div class="ir"><span class="lbl">Последний визит</span><span class="val" id="pd-last">—</span></div>
+    </div>
     <div class="sec-title" style="margin-top:16px">Напоминания</div>
     <div id="pd-reminders"></div>
     <button class="btn btn-ghost" style="margin-bottom:4px;font-family:Nunito,sans-serif;font-size:12px" onclick="openAddReminder()">+ Добавить напоминание</button>
@@ -845,13 +831,12 @@ select { background-image:none; }
 <div class="overlay" id="modalApptDetail" onclick="closeOuter(event,'modalApptDetail')">
   <div class="modal"><div class="modal-handle"></div><div class="modal-title">📋 Запись</div>
     <div class="card" style="box-shadow:none;background:var(--bg2)" id="apptDetailCard"></div>
-    <div id="apptActions"></div>
-    <button class="btn btn-ghost" onclick="closeModal('modalApptDetail')">Закрыть</button>
+    <div id="apptActions"></div>    <button class="btn btn-ghost" onclick="closeModal('modalApptDetail')">Закрыть</button>
   </div>
 </div>
 
 <div class="overlay" id="modalAddDoctor" onclick="closeOuter(event,'modalAddDoctor')">
-  <div class="modal"><div class="modal-handle"></div><div class="modal-title">‍⚕️ Добавить врача</div>
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">👨‍️ Добавить врача</div>
     <div class="fg"><label class="fl">Имя</label><input class="fi" id="ndName" placeholder="Смирнова Елена Васильевна"></div>
     <div class="fg"><label class="fl">Специализация</label><input class="fi" id="ndSpec" placeholder="Терапевт"></div>
     <div class="fg"><label class="fl">Телефон</label><input class="fi" type="tel" id="ndPhone" placeholder="+7 (000) 000-00-00"></div>
@@ -862,12 +847,12 @@ select { background-image:none; }
 </div>
 
 <div class="overlay" id="modalAddReminder" onclick="closeOuter(event,'modalAddReminder')">
-  <div class="modal"><div class="modal-handle"></div><div class="modal-title"> Напоминание</div>
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">🔔 Напоминание</div>
     <input type="hidden" id="remPetId">
     <div class="fg"><label class="fl">Тип</label>
       <select class="fs" id="remType">
         <option value="vaccine">💉 Вакцинация</option>
-        <option value="antiparasitic"> Обработка от паразитов</option>
+        <option value="antiparasitic">🐛 Обработка от паразитов</option>
         <option value="checkup">🩺 Плановый осмотр</option>
         <option value="other">📋 Другое</option>
       </select>
@@ -880,7 +865,8 @@ select { background-image:none; }
 </div>
 
 <div class="overlay" id="modalUser" onclick="closeOuter(event,'modalUser')">
-  <div class="modal"><div class="modal-handle"></div><div class="modal-title">👤 Профиль</div>    <div class="card" style="box-shadow:none;background:var(--bg2)" id="userCard"></div>
+  <div class="modal"><div class="modal-handle"></div><div class="modal-title">👤 Профиль</div>
+    <div class="card" style="box-shadow:none;background:var(--bg2)" id="userCard"></div>
     <button class="btn btn-ghost" style="margin-top:8px;color:#dc2626;background:#fee2e2" onclick="logout()">Выйти</button>
     <button class="btn btn-ghost" onclick="closeModal('modalUser')">Закрыть</button>
   </div>
@@ -894,8 +880,7 @@ select { background-image:none; }
     <div class="fg"><label class="fl">Лечение</label><textarea class="ft" id="diagTreatment" placeholder="Описание лечения..."></textarea></div>
     <div class="fg"><label class="fl">Назначения</label><textarea class="ft" id="diagPrescriptions" placeholder="Препараты, дозировки..."></textarea></div>
     <div style="display:flex;gap:10px">
-      <div class="fg" style="flex:1"><label class="fl">Вес (кг)</label><input class="fi" type="number" id="diagWeight" placeholder="4.5"></div>
-      <div class="fg" style="flex:1"><label class="fl">Температура</label><input class="fi" type="number" id="diagTemp" placeholder="38.5"></div>
+      <div class="fg" style="flex:1"><label class="fl">Вес (кг)</label><input class="fi" type="number" id="diagWeight" placeholder="4.5"></div>      <div class="fg" style="flex:1"><label class="fl">Температура</label><input class="fi" type="number" id="diagTemp" placeholder="38.5"></div>
     </div>
     <div class="fg"><label class="fl">Следующий визит</label><input class="fi" type="date" id="diagNextVisit"></div>
     <div class="fg"><label class="fl">Заметки</label><textarea class="ft" id="diagNotes" placeholder="Дополнительно..."></textarea></div>
@@ -923,13 +908,14 @@ select { background-image:none; }
     <div class="fg"><label class="fl">Питомец (кличка)</label><input class="fi" id="abPetName" placeholder="Мурзик"></div>
     <div class="fg"><label class="fl">Вид питомца</label>
       <select class="fs" id="abPetType">
-        <option value="🐱">🐱 Кошка</option><option value="🐶">🐶 Собака</option>
-        <option value="🐰">🐰 Кролик</option><option value="🦜">🦜 Птица</option><option value="🐾">🐾 Другое</option>
+        <option value="🐱"> Кошка</option><option value="🐶"> Собака</option>
+        <option value="🐰">🐰 Кролик</option><option value="🦜">🦜 Птица</option><option value="🐾"> Другое</option>
       </select>
     </div>
     <div class="fg"><label class="fl">Врач</label>
       <select class="fs" id="abDoctor"><option value="">— Любой —</option></select>
-    </div>    <div class="fg"><label class="fl">Дата</label><input class="fi" type="date" id="abDate"></div>
+    </div>
+    <div class="fg"><label class="fl">Дата</label><input class="fi" type="date" id="abDate"></div>
     <div class="fg"><label class="fl">Время</label>
       <select class="fs" id="abTime">
         <option>9:00</option><option>9:30</option><option>10:00</option><option>10:30</option>
@@ -943,7 +929,6 @@ select { background-image:none; }
     <button class="btn btn-ghost" onclick="closeModal('modalAdminBook')">Отмена</button>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <!-- ═══════════════════════════════════════ -->
@@ -978,7 +963,8 @@ let clinic = null;
 let doctors = [];
 
 // ══════════════════════════════════════════
-// INIT// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
 function withTimeout(promise, ms = 3000) {
   return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
 }
@@ -992,8 +978,7 @@ async function init() {
 
   clinic = CLINIC_FALLBACK;
   applyClinicData();
-  buildDates();
-  buildTimes([]);
+  buildDates();  buildTimes([]);
   generateQRCode();
 
   setTimeout(() => {
@@ -1027,7 +1012,8 @@ function applyClinicData() {
   document.getElementById('ci-sched').textContent = clinic.schedule || '—';
   document.getElementById('clinicSchedule').textContent = clinic.schedule || '';
   document.getElementById('ma-name').textContent = clinic.name || '—';
-  document.getElementById('ma-addr').textContent = clinic.address || '—';  document.getElementById('ma-sched').textContent = clinic.schedule || '—';
+  document.getElementById('ma-addr').textContent = clinic.address || '—';
+  document.getElementById('ma-sched').textContent = clinic.schedule || '—';
   document.getElementById('mc-phone').textContent = clinic.phone || '—';
   document.getElementById('mc-wa').textContent = clinic.whatsapp || clinic.phone || '—';
   document.getElementById('mc-tg').textContent = clinic.telegram || '—';
@@ -1041,8 +1027,7 @@ async function loadDoctors() {
     doctors = data || [];
     const sel = document.getElementById('bkDoctor');
     sel.innerHTML = '<option value="">— Любой доступный —</option>';
-    doctors.forEach(d => {
-      const o = document.createElement('option');
+    doctors.forEach(d => {      const o = document.createElement('option');
       o.value = d.id;
       o.textContent = d.name + (d.specialty ? ' — ' + d.specialty : '');
       sel.appendChild(o);
@@ -1076,7 +1061,8 @@ async function loadDoctorsPublic() {
 }
 
 // ══════════════════════════════════════════
-// AUTH// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
 function showAuth() { document.getElementById('authScreen').classList.add('show'); }
 function showApp() {
   document.getElementById('authScreen').classList.remove('show');
@@ -1090,8 +1076,7 @@ function showApp() {
     document.getElementById('tabDoctors').style.display = currentUser.role === 'admin' ? '' : 'none';
     document.getElementById('tabClients').style.display = currentUser.role === 'admin' ? '' : 'none';
     document.getElementById('staffPanelTitle').textContent = currentUser.role === 'admin' ? 'Панель администратора' : 'Панель врача';
-    pageHistory = ['home'];
-    goPage('home', document.querySelectorAll('.nav-btn')[0]);
+    pageHistory = ['home'];    goPage('home', document.querySelectorAll('.nav-btn')[0]);
   }
   loadUpcoming();
   loadDoctorsPublic();
@@ -1125,7 +1110,8 @@ function applyRoleUI() {
   if (tabClients) tabClients.style.display = isAdmin ? '' : 'none';
 
   document.getElementById('petsTitle').textContent = isAdmin ? 'Все питомцы клиники' : isClient ? 'Мои питомцы' : 'Питомцы';
-  document.getElementById('petsSearch').style.display = isAdmin ? 'block' : 'none';  document.getElementById('addPetBtn').style.display = isClient ? 'block' : 'none';
+  document.getElementById('petsSearch').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('addPetBtn').style.display = isClient ? 'block' : 'none';
 
   if (!isClient) {
     document.getElementById('heroTitle').textContent = 'Добро пожаловать, ' + currentUser.name.split(' ')[0] + '!';
@@ -1138,11 +1124,10 @@ function applyRoleTheme() {
   header.classList.remove('role-doctor','role-admin');
   if (currentUser.role === 'doctor') {
     header.classList.add('role-doctor');
-    badge.textContent = '‍⚕️ Врач';
-    badge.style.display = 'inline';
-  } else if (currentUser.role === 'admin') {
+    badge.textContent = '👨‍⚕️ Врач';
+    badge.style.display = 'inline';  } else if (currentUser.role === 'admin') {
     header.classList.add('role-admin');
-    badge.textContent = ' Админ';
+    badge.textContent = '🏥 Админ';
     badge.style.display = 'inline';
   } else {
     badge.style.display = 'none';
@@ -1174,7 +1159,8 @@ async function loginClient() {
     showApp();
     toast('✅ Добро пожаловать, ' + name.split(' ')[0] + '!');
   } catch(e) {
-    toast('❌ Ошибка входа: ' + e.message);  }
+    toast('❌ Ошибка входа: ' + e.message);
+  }
 }
 
 async function loginStaff() {
@@ -1188,8 +1174,7 @@ async function loginStaff() {
     currentUser = { id: data.id, name: data.name, phone: data.phone, role: data.role, staffId: data.id };
     localStorage.setItem('vetsfera_user', JSON.stringify(currentUser));
     showApp();
-    toast('✅ Добро пожаловать, ' + data.name.split(' ')[0] + '!');
-  } catch(e) {
+    toast('✅ Добро пожаловать, ' + data.name.split(' ')[0] + '!');  } catch(e) {
     toast('❌ Ошибка: ' + e.message);
   }
 }
@@ -1223,7 +1208,8 @@ function updateHeaderUser() {
   const ico = currentUser.role === 'admin' ? '🏥' : currentUser.role === 'doctor' ? '👨‍⚕️' : '👤';
   document.getElementById('headerUser').textContent = ico + ' ' + first;
   const lb = document.getElementById('logoutBtn');
-  if (lb) lb.style.display = 'block';}
+  if (lb) lb.style.display = 'block';
+}
 
 function showUserMenu() {
   if (!currentUser) { showAuth(); return; }
@@ -1237,8 +1223,7 @@ function showUserMenu() {
   openModal('modalUser');
 }
 
-function applyUserSession() {
-  if (currentUser) {
+function applyUserSession() {  if (currentUser) {
     document.getElementById('bkName').value = currentUser.name || '';
     document.getElementById('bkPhone').value = currentUser.phone || '';
     if (currentUser.role === 'client') loadBookingPets();
@@ -1272,7 +1257,8 @@ async function loadBookingPets() {
 function onPetSelectChange() {
   const val = document.getElementById('bkPetSelect').value;
   const manual = document.getElementById('bkPetManual');
-  if (val === 'new' || val === '') {    manual.style.display = 'block';
+  if (val === 'new' || val === '') {
+    manual.style.display = 'block';
   } else {
     manual.style.display = 'none';
     try {
@@ -1286,8 +1272,7 @@ function onPetSelectChange() {
 // ══════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════
-function goPage(name, btn) {
-  if (window.location.hash !== '#' + name) {
+function goPage(name, btn) {  if (window.location.hash !== '#' + name) {
     history.pushState({ page: name }, '', '#' + name);
   }
   pageHistory.push(name);
@@ -1321,7 +1306,8 @@ function buildDates() {
     const chip = document.createElement('div');
     chip.className = 'date-chip' + (i === 0 ? ' sel' : '');
     chip.innerHTML = `<div class="dn">${days[d.getDay()]}</div><div class="dd">${d.getDate()}</div>`;
-    chip.dataset.date = d.toISOString().split('T')[0];    if (i === 0) selectedDate = chip.dataset.date;
+    chip.dataset.date = d.toISOString().split('T')[0];
+    if (i === 0) selectedDate = chip.dataset.date;
     chip.onclick = () => {
       document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('sel'));
       chip.classList.add('sel');
@@ -1335,8 +1321,7 @@ function buildDates() {
 async function loadBusySlots() {
   if (!selectedDate) return;
   try {
-    const { data } = await sb.from('appointments')
-      .select('time').eq('clinic_id', CLINIC_ID).eq('date', selectedDate)
+    const { data } = await sb.from('appointments')      .select('time').eq('clinic_id', CLINIC_ID).eq('date', selectedDate)
       .not('status', 'eq', 'cancelled');
     const busy = (data || []).map(r => r.time?.slice(0,5));
     buildTimes(busy);
@@ -1370,7 +1355,8 @@ async function submitBooking() {
   const doctorId = document.getElementById('bkDoctor').value || null;
   const complaint = document.getElementById('bkComplaint').value.trim();
 
-  const petSelectVal = document.getElementById('bkPetSelect').value;  let selectedPetId = null;
+  const petSelectVal = document.getElementById('bkPetSelect').value;
+  let selectedPetId = null;
   let petName = petNameInput;
 
   if (petSelectVal && petSelectVal !== 'new' && petSelectVal !== '') {
@@ -1385,7 +1371,6 @@ async function submitBooking() {
   const btn = document.getElementById('bkSubmit');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Оформляем...';
-
   try {
     let { data: client } = await sb.from('clients').select('id').eq('clinic_id', CLINIC_ID).eq('phone', phone).maybeSingle();
     if (!client) {
@@ -1419,7 +1404,8 @@ async function submitBooking() {
     setTimeout(() => goPage('home', document.querySelectorAll('.nav-btn')[0]), 1500);
   } catch(e) {
     toast('❌ Ошибка: ' + e.message);
-  } finally {    btn.disabled = false;
+  } finally {
+    btn.disabled = false;
     btn.innerHTML = 'Записаться →';
   }
 }
@@ -1433,8 +1419,7 @@ async function loadUpcoming() {
   try {
     let q = sb.from('appointments').select(`
       id, date, time, status, complaint, client_id,
-      pets(name, type), staff(name, specialty)
-    `).eq('clinic_id', CLINIC_ID)
+      pets(name, type), staff(name, specialty)    `).eq('clinic_id', CLINIC_ID)
       .gte('date', new Date().toISOString().split('T')[0])
       .not('status', 'eq', 'cancelled')
       .order('date').order('time').limit(5);
@@ -1450,7 +1435,7 @@ async function loadUpcoming() {
     document.getElementById('upcomingCount').textContent = data.length;
     list.innerHTML = data.map(a => `
       <div class="appt" onclick="openApptDetail('${a.id}')">
-        <div class="appt-ava">${a.pets?.type || ''}</div>
+        <div class="appt-ava">${a.pets?.type || '🐾'}</div>
         <div class="appt-info">
           <div class="appt-name">${a.pets?.name || '—'}</div>
           <div class="appt-sub">${a.complaint || 'Без жалоб'} · ${a.staff?.name || 'Любой врач'}</div>
@@ -1468,7 +1453,8 @@ async function loadUpcoming() {
 // PETS
 // ══════════════════════════════════════════
 async function loadPets() {
-  const list = document.getElementById('petsList');  if (!currentUser) { list.innerHTML = '<div class="empty"><div class="ico">🔒</div><p>Войдите в аккаунт</p></div>'; return; }
+  const list = document.getElementById('petsList');
+  if (!currentUser) { list.innerHTML = '<div class="empty"><div class="ico">🔒</div><p>Войдите в аккаунт</p></div>'; return; }
   if (currentUser.role === 'admin') { await loadAllPets(); return; }
   if (currentUser.role !== 'client') { list.innerHTML = '<div class="empty"><div class="ico">🔒</div><p>Раздел для клиентов</p></div>'; return; }
 
@@ -1482,8 +1468,7 @@ async function loadPets() {
   } catch(e) {}
 }
 
-function renderPetCard(p, clientName) {
-  const age = p.birth_year ? (new Date().getFullYear() - p.birth_year) + ' лет' : '—';
+function renderPetCard(p, clientName) {  const age = p.birth_year ? (new Date().getFullYear() - p.birth_year) + ' лет' : '—';
   return `
     <div class="pet-card" onclick="openPetDetail('${p.id}')">
       <div class="pet-ava">${p.type || '🐾'}</div>
@@ -1517,7 +1502,8 @@ function searchAllPets() {
   if (!q) { renderPetsList(allPetsData); return; }
   renderPetsList(allPetsData.filter(p =>
     p.name?.toLowerCase().includes(q) || p.clients?.name?.toLowerCase().includes(q) || p.breed?.toLowerCase().includes(q)
-  ));}
+  ));
+}
 
 async function addPet() {
   if (!currentUser) { toast('⚠️ Войдите в аккаунт'); return; }
@@ -1531,8 +1517,7 @@ async function addPet() {
     await sb.from('pets').insert({ client_id: currentUser.id, clinic_id: CLINIC_ID, name, type, breed, birth_year: year, gender });
     ['npName','npBreed','npYear'].forEach(id => document.getElementById(id).value = '');
     closeModal('modalAddPet'); loadPets();
-    toast(' ' + name + ' добавлен!');
-  } catch(e) { toast('❌ ' + e.message); }
+    toast('🐾 ' + name + ' добавлен!');  } catch(e) { toast('❌ ' + e.message); }
 }
 
 async function openPetDetail(petId) {
@@ -1566,7 +1551,8 @@ async function openPetDetail(petId) {
 }
 
 // ══════════════════════════════════════════
-// STAFF PANEL// ══════════════════════════════════════════
+// STAFF PANEL
+// ══════════════════════════════════════════
 function switchStaffTab(tab, btn) {
   ['today','all','clients','stats','doctors'].forEach(t => {
     const el = document.getElementById('staffTab-' + t);
@@ -1580,7 +1566,6 @@ function switchStaffTab(tab, btn) {
   if (tab === 'clients') loadClients();
   if (tab === 'doctors') loadDoctorsList();
 }
-
 async function loadTodayAppointments() {
   const today = new Date().toISOString().split('T')[0];
   try {
@@ -1615,7 +1600,8 @@ function renderApptCard(a) {
         <div class="appt-card-ava">${a.pets?.type || '🐾'}</div>
         <div class="appt-card-info">
           <div class="appt-card-name">${a.pets?.name || '—'}</div>
-          <div class="appt-card-sub" style="cursor:${isStaff&&clientId?'pointer':'default'}"            onclick="${isStaff&&clientId?`openClientProfile('${clientId}')`:''}"
+          <div class="appt-card-sub" style="cursor:${isStaff&&clientId?'pointer':'default'}"
+            onclick="${isStaff&&clientId?`openClientProfile('${clientId}')`:''}"
           >${a.clients?.name || '—'} · ${phone}</div>
         </div>
         <div class="appt-card-time">${(a.time||'').slice(0,5)}</div>
@@ -1629,8 +1615,7 @@ function renderApptCard(a) {
         ${phone ? `<button class="act-btn act-call" onclick="window.location.href='tel:${phone}'">📞 Позвонить</button>` : ''}
         ${isStaff&&clientId ? `<button class="act-btn act-restore" onclick="openClientProfile('${clientId}')">👤 Клиент</button>` : ''}
         ${actions}
-      </div>
-    </div>`;
+      </div>    </div>`;
 }
 
 function buildActionBtns(a) {
@@ -1639,7 +1624,7 @@ function buildActionBtns(a) {
   let btns = '';
   if (a.status === 'pending') {
     btns += `<button class="act-btn act-confirm" onclick="quickStatus('${id}','confirmed',event)">✓ Подтвердить</button>`;
-    btns += `<button class="act-btn act-cancel" onclick="quickStatus('${id}','cancelled',event)"> Отменить</button>`;
+    btns += `<button class="act-btn act-cancel" onclick="quickStatus('${id}','cancelled',event)">✗ Отменить</button>`;
   } else if (a.status === 'confirmed') {
     btns += `<button class="act-btn act-done" onclick="quickStatus('${id}','done',event)">✓ Завершить</button>`;
     btns += `<button class="act-btn act-cancel" onclick="quickStatus('${id}','cancelled',event)">✗ Отменить</button>`;
@@ -1664,7 +1649,8 @@ async function quickStatus(id, status, e) {
 // ══════════════════════════════════════════
 // DIAGNOSIS
 // ══════════════════════════════════════════
-function openDiagnosis(apptId, petId, e) {  if (e) e.stopPropagation();
+function openDiagnosis(apptId, petId, e) {
+  if (e) e.stopPropagation();
   document.getElementById('diagApptId').value = apptId;
   document.getElementById('diagPetId').value = petId;
   ['diagDiagnosis','diagTreatment','diagPrescriptions','diagWeight','diagTemp','diagNextVisit','diagNotes']
@@ -1678,8 +1664,7 @@ async function saveDiagnosis() {
   const diagnosis = document.getElementById('diagDiagnosis').value.trim();
   const treatment = document.getElementById('diagTreatment').value.trim();
   const prescriptions = document.getElementById('diagPrescriptions').value.trim();
-  const weight = parseFloat(document.getElementById('diagWeight').value) || null;
-  const temp = parseFloat(document.getElementById('diagTemp').value) || null;
+  const weight = parseFloat(document.getElementById('diagWeight').value) || null;  const temp = parseFloat(document.getElementById('diagTemp').value) || null;
   const nextVisit = document.getElementById('diagNextVisit').value || null;
 
   if (!diagnosis) { toast('⚠️ Введите диагноз'); return; }
@@ -1714,6 +1699,7 @@ function reminderStatus(dateStr) {
   if (diff <= 7) return { cls:'soon', label:'Через ' + diff + ' дн.', badge:'b-yellow' };
   return { cls:'ok', label:'Через ' + diff + ' дн.', badge:'b-green' };
 }
+
 async function loadReminders(petId) {
   try {
     const { data } = await sb.from('reminders').select('*').eq('pet_id', petId).eq('is_done', false).order('due_date');
@@ -1727,8 +1713,7 @@ async function loadReminders(petId) {
             <div class="reminder-ico ${st.cls}">${reminderIco(r.type)}</div>
             <div class="reminder-info">
               <div class="reminder-title">${r.title}</div>
-              <div class="reminder-date">${formatDateRu(r.due_date)} · <span class="badge ${st.badge}" style="font-size:10px">${st.label}</span></div>
-            </div>
+              <div class="reminder-date">${formatDateRu(r.due_date)} · <span class="badge ${st.badge}" style="font-size:10px">${st.label}</span></div>            </div>
             ${!r.is_done ? `<button onclick="doneReminder('${r.id}')" style="background:none;border:none;font-size:16px;cursor:pointer">✓</button>` : ''}
           </div>`;
       }).join('') + '</div>';
@@ -1762,7 +1747,8 @@ async function loadClientReminders() {
   } catch(e) {}
 }
 
-function openAddReminder() {  const d = new Date(); d.setDate(d.getDate() + 30);
+function openAddReminder() {
+  const d = new Date(); d.setDate(d.getDate() + 30);
   document.getElementById('remDate').value = d.toISOString().split('T')[0];
   document.getElementById('remTitle').value = '';
   openModal('modalAddReminder');
@@ -1776,8 +1762,7 @@ async function saveReminder() {
   if (!title || !date) { toast('⚠️ Заполните название и дату'); return; }
   try {
     await sb.from('reminders').insert({ clinic_id: CLINIC_ID, pet_id: petId, type, title, due_date: date });
-    closeModal('modalAddReminder'); loadReminders(petId);
-    toast('🔔 Напоминание добавлено!');
+    closeModal('modalAddReminder'); loadReminders(petId);    toast('🔔 Напоминание добавлено!');
   } catch(e) { toast('❌ ' + e.message); }
 }
 
@@ -1811,6 +1796,7 @@ async function openClientProfile(clientId, e) {
       <div class="ir"><span class="lbl">Имя</span><span class="val">${client.name}</span></div>
       <div class="ir"><span class="lbl">Телефон</span><span class="val">${client.phone}</span></div>
       <div class="ir"><span class="lbl">С нами с</span><span class="val">${formatDateRu(client.created_at?.split('T')[0])}</span></div>`;
+
     document.getElementById('cpPets').innerHTML = pets?.length
       ? pets.map(p => `<div class="pet-card" style="margin-bottom:8px" onclick="openPetDetail('${p.id}')"><div class="pet-ava">${p.type||'🐾'}</div><div><div class="pet-name">${p.name}</div><div class="pet-breed">${p.breed||'—'}</div></div></div>`).join('')
       : '<div class="empty" style="padding:12px 0"><p>Питомцев нет</p></div>';
@@ -1826,7 +1812,6 @@ async function openClientProfile(clientId, e) {
 }
 
 function bookForClient() { closeModal('modalClientProfile'); openAdminBookModal(); }
-
 async function submitAdminBooking() {
   const name = document.getElementById('abName').value.trim();
   const phone = document.getElementById('abPhone').value.trim();
@@ -1860,7 +1845,8 @@ function setStatusFilter(status, btn) {
 }
 
 async function loadAllAppointments() {
-  try {    let q = sb.from('appointments').select(`id, date, time, status, complaint, pet_id, clients(id, name, phone), pets(name, type), staff(name)`).eq('clinic_id', CLINIC_ID).order('date', {ascending:false}).order('time', {ascending:false});
+  try {
+    let q = sb.from('appointments').select(`id, date, time, status, complaint, pet_id, clients(id, name, phone), pets(name, type), staff(name)`).eq('clinic_id', CLINIC_ID).order('date', {ascending:false}).order('time', {ascending:false});
     if (currentUser?.role === 'doctor') q = q.eq('staff_id', currentUser.staffId);
     if (currentStatusFilter) q = q.eq('status', currentStatusFilter);
     const { data, error } = await q;
@@ -1874,8 +1860,7 @@ async function loadAllAppointments() {
 async function loadStats() {
   try {
     const now = new Date();
-    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-    const monthAgo = new Date(now); monthAgo.setDate(now.getDate() - 30);
+    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);    const monthAgo = new Date(now); monthAgo.setDate(now.getDate() - 30);
     const [wk, mn, cl, pt] = await Promise.all([
       sb.from('appointments').select('id', {count:'exact'}).eq('clinic_id', CLINIC_ID).gte('date', weekAgo.toISOString().split('T')[0]),
       sb.from('appointments').select('id', {count:'exact'}).eq('clinic_id', CLINIC_ID).gte('date', monthAgo.toISOString().split('T')[0]),
@@ -1909,12 +1894,13 @@ async function loadClients() {
     document.getElementById('cs-total').textContent = count || 0;
     document.getElementById('cs-pets').textContent = pets?.length || 0;
     document.getElementById('cs-new').textContent = newClients?.length || 0;
-    renderClientsList(allClientsData);  } catch(e) { list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки</p></div>'; }
+    renderClientsList(allClientsData);
+  } catch(e) { list.innerHTML = '<div class="empty"><div class="ico">❌</div><p>Ошибка загрузки</p></div>'; }
 }
 
 function renderClientsList(clients) {
   const list = document.getElementById('clientsList');
-  if (!clients?.length) { list.innerHTML = '<div class="empty"><div class="ico"></div><p>Клиентов пока нет</p></div>'; return; }
+  if (!clients?.length) { list.innerHTML = '<div class="empty"><div class="ico">👥</div><p>Клиентов пока нет</p></div>'; return; }
   list.innerHTML = clients.map(c => {
     const initials = c.name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
     const daysAgo = Math.floor((Date.now() - new Date(c.created_at)) / 86400000);
@@ -1923,8 +1909,7 @@ function renderClientsList(clients) {
         <div class="appt-card-top">
           <div class="appt-card-ava" style="background:linear-gradient(135deg,var(--p),var(--pm));color:#fff;font-weight:800;font-size:14px">${initials}</div>
           <div class="appt-card-info">
-            <div class="appt-card-name">${c.name}</div>
-            <div class="appt-card-sub">${c.phone}</div>
+            <div class="appt-card-name">${c.name}</div>            <div class="appt-card-sub">${c.phone}</div>
           </div>
           <div style="text-align:right">
             ${daysAgo <= 7 ? '<span class="badge b-green" style="font-size:10px">Новый</span>' : ''}
@@ -1958,7 +1943,8 @@ async function loadDoctorsList() {
     const list = document.getElementById('doctorsList');
     if (!data?.length) { list.innerHTML = '<div class="empty"><p>Врачей нет</p></div>'; return; }
     list.innerHTML = data.map(d => `
-      <div class="appt">        <div class="appt-ava" style="font-size:16px">👨‍️</div>
+      <div class="appt">
+        <div class="appt-ava" style="font-size:16px">👨‍⚕️</div>
         <div class="appt-info">
           <div class="appt-name">${d.name}</div>
           <div class="appt-sub">${d.specialty || '—'} · ${d.phone}</div>
@@ -1972,8 +1958,7 @@ async function loadDoctorsList() {
 async function addDoctor() {
   const name = document.getElementById('ndName').value.trim();
   const spec = document.getElementById('ndSpec').value.trim();
-  const phone = document.getElementById('ndPhone').value.trim();
-  const pass = document.getElementById('ndPass').value.trim();
+  const phone = document.getElementById('ndPhone').value.trim();  const pass = document.getElementById('ndPass').value.trim();
   if (!name || !phone || !pass) { toast('⚠️ Заполните все поля'); return; }
   try {
     await sb.from('staff').insert({ clinic_id: CLINIC_ID, name, specialty: spec, phone, password_hash: pass, role: 'doctor' });
@@ -2007,7 +1992,8 @@ async function openApptDetail(id) {
           ${a.status !== 'cancelled' ? `<button class="status-btn sb-cancel" onclick="changeStatus('${id}','cancelled')">✗ Отменить</button>` : ''}
         </div>`;
     } else { actions.innerHTML = ''; }
-    openModal('modalApptDetail');  } catch(e) {}
+    openModal('modalApptDetail');
+  } catch(e) {}
 }
 
 async function changeStatus(id, status) {
@@ -2021,8 +2007,7 @@ async function changeStatus(id, status) {
 // ══════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════
-function statusBadge(s) {
-  const map = {
+function statusBadge(s) {  const map = {
     pending: ['b-yellow','Ожидает'], confirmed: ['b-blue','Подтверждена'],
     in_progress: ['b-purple','Идёт приём'], done: ['b-green','Завершена'],
     cancelled: ['b-red','Отменена'],
@@ -2056,7 +2041,8 @@ function toast(msg) {
 
 // ═════════════════════════════════════════
 // PWA
-// ══════════════════════════════════════════if ('serviceWorker' in navigator) {
+// ══════════════════════════════════════════
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(reg => {
     reg.update();
   }).catch(() => {});
@@ -2070,8 +2056,7 @@ let pageHistory = ['home'];
 
 window.addEventListener('popstate', () => {
   const openOverlay = document.querySelector('.overlay.open');
-  if (openOverlay) { openOverlay.classList.remove('open'); return; }
-  pageHistory.pop();
+  if (openOverlay) { openOverlay.classList.remove('open'); return; }  pageHistory.pop();
   const prev = pageHistory[pageHistory.length - 1] || 'home';
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
